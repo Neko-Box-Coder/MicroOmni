@@ -6,7 +6,7 @@ List of features not in any particular order:
 - fuzzy search for files recursively
     - This extends from fzfinder, but can work independently
 - Centering cursor to viewport
-- (WIP) Jump Selection
+- Jump Selection
 - (WIP) Global Cursor History
 - (WIP) Bracket jumping without on top of it
 - (WIP) Contect selection within brackets
@@ -27,10 +27,14 @@ All of these are available for Unix and Windows
 ### Keybindings
 - `OmniCenter`: Centers your cursor to the middle of the viewport
 - `OmniContent`: Searches all the file contents recursively with whatever is selected
+- `OmniSelect`: Selects from current cursor position to either relative line or absolute line
+
 
 
 ### Settings
 - `OmniContentArgs`: Argument to be passed to fzf, `-i` is recommended
+- `OmniSelectType`: Either "relative" or "absolute" to for target line number
+
 - `fzfCmd`: (Extending from fzfinder) The `fzf` location. Defaults to `fzf`
 - `fzfOpen`: (Extending from fzfinder) How to open the new file. Available options are:
     - `newtab`: Opens in new tab

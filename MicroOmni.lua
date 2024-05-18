@@ -10,9 +10,13 @@ local util = import("micro/util")
 local screen = import("micro/screen")
 
 local OmniContentArgs =  config.GetGlobalOption("OmniContentArgs")
+local OmniSelectType = config.GetGlobalOption("OmniSelectType")
+
 local fzfCmd =  config.GetGlobalOption("fzfcmd")
 local fzfOpen = config.GetGlobalOption("fzfopen")
 local fzfPath = config.GetGlobalOption("fzfpath")
+
+
 
 function getOS()
     -- ask LuaJIT first
@@ -69,7 +73,6 @@ end
 
 function OnFindPromptDone(content, cancelled)
     if cancelled then return end
-
     FindContent(content)
 end
 
@@ -137,20 +140,43 @@ function fzfParseOutput(output, bp, lineNum)
 end
 
 function OmniCenter(bp)
-    -- local buf = bp.buf
-    -- micro.Log("Hello")
-    -- local cur = buf.Cursor
-    -- bp.buf.Cursor:Deselect(false)
-    -- cur:ResetSelection()
-    -- buf:MergeCursors()
-    -- bp.Cursor.X = 0
-    -- bp.Cursor.Y = bp:BufView().y + bp:BufView().Height / 2
     local view = bp:GetView()
-    -- bp:Relocate()
     bp.Cursor:ResetSelection()
     bp.Cursor:GotoLoc(buffer.Loc(view.StartCol, view.StartLine.Line + view.Height / 2))
-    -- bp:Relocate()
 end
+
+function OmniSelect(bp, args)
+    if #args < 1 then return end
+
+    local buf = bp.Buf
+    -- local bufLineNum = buf:LinesNum()
+    local cursor = buf:GetActiveCursor()
+    local currentLoc = cursor.Loc
+    -- local currentLine = cursor.Loc.Y
+    local targetLine = cursor.Loc.Y
+
+    cursor.OrigSelection[1] = buffer.Loc(cursor.Loc.X, cursor.Loc.Y)
+
+    if OmniSelectType == nil or OmniSelectType == "" then
+        OmniSelectType = "relative"
+    end
+
+    if OmniSelectType == "relative" then
+        targetLine = targetLine + tonumber(args[1])
+     else
+        targetLine = tonumber(args[1])
+    end
+
+    micro.InfoBar():Message("targetLine: ", targetLine)
+    -- micro.Log("targetLine: ", targetLine)
+
+    -- cursor:SetSelectionStart(currentLoc)
+    cursor:SelectTo(buffer.Loc(currentLoc.X, targetLine))
+    bp:Relocate()
+end
+
+
+
 
 function TestECB(msg)
     micro.Log("TestECV called with message: ", msg)
@@ -171,6 +197,7 @@ function init()
     -- config.MakeCommand("fzfinder", fzfinder, config.NoComplete)
     config.MakeCommand("OmniContent", OmniContent, config.NoComplete)
     config.MakeCommand("OmniCenter", OmniCenter, config.NoComplete)
+    config.MakeCommand("OmniSelect", OmniSelect, config.NoComplete)
 
     config.MakeCommand("OmniTest", OmniTest, config.NoComplete)
 
