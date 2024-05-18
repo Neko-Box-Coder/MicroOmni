@@ -1,0 +1,14 @@
+[{
+  "Name": "MicroOmni",
+  "Description": "Powerful micro plugin",
+  "Tags": ["fzf"],
+  "Versions": [
+    {
+      "Version": "0.0.1",
+      "Url": "",
+      "Require": {
+        "micro": ">=2.0.0-1"
+      }
+    }
+  ]
+}]
