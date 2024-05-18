@@ -120,7 +120,7 @@ function fzfParseOutput(output, bp, lineNum)
         return
     end
 
-    micro.InfoBar():Message("file is ", file)
+    -- micro.InfoBar():Message("file is ", file)
 
     if fzfOpen == "newtab" then
        bp:NewTabCmd({file})
@@ -164,10 +164,10 @@ function OmniSelect(bp, args)
     if OmniSelectType == "relative" then
         targetLine = targetLine + tonumber(args[1])
      else
-        targetLine = tonumber(args[1])
+        targetLine = tonumber(args[1]) - 1
     end
 
-    micro.InfoBar():Message("targetLine: ", targetLine)
+    -- micro.InfoBar():Message("targetLine: ", targetLine)
     -- micro.Log("targetLine: ", targetLine)
 
     -- cursor:SetSelectionStart(currentLoc)
