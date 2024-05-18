@@ -8,6 +8,12 @@ List of features not in any particular order:
 - Centering cursor to viewport
 - (WIP) Jump Selection
 - (WIP) Global Cursor History
+- (WIP) Bracket jumping without on top of it
+- (WIP) Contect selection within brackets
+- (WIP) Diff view
+- (WIP) Copy current file path
+- (WIP) Resize split with keyboard
+<!-- Using https://github.com/zyedidia/micro/issues/1807#issuecomment-1907899274 -->
 
 
 ### Requirements

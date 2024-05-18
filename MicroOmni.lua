@@ -55,16 +55,30 @@ function OmniContent(bp)
         OmniContentArgs = ""
     end
 
-  local selectedText = ""
+    local selectedText = ""
     if bp.Cursor:HasSelection() then
         selectedText = bp.Cursor:GetSelection()
     else
-        micro.InfoBar():Error("You must select something first before searching anything")
+        -- micro.InfoBar():Error("You must select something first before searching anything")
+        micro.InfoBar():Prompt("Content to find > ", "", "", nil, OnFindPromptDone)
         return
     end
 
+    FindContent(selectedText)
+end
+
+function OnFindPromptDone(content, cancelled)
+    if cancelled then return end
+
+    FindContent(content)
+end
+
+function FindContent(str)
+
+    local bp = micro.CurPane()
+
     setupFzf(bp)
-    selectedText = util.String(selectedText)
+    local selectedText = util.String(str)
 
     if os == "Unix" then
         selectedText:gsub("'", "'\\''")
@@ -91,7 +105,9 @@ function OmniContent(bp)
         -- lineNumber = tonumber(lineNumber)
         fzfParseOutput(filePath, bp, lineNumber)
     end
+
 end
+
 
 function fzfParseOutput(output, bp, lineNum)
   if output ~= "" then
@@ -136,8 +152,27 @@ function OmniCenter(bp)
     -- bp:Relocate()
 end
 
+function TestECB(msg)
+    micro.Log("TestECV called with message: ", msg)
+end
+
+function TestDoneCB(msg, cancelled)
+    micro.Log("TestDoneCB called with message ", msg, " and cancelled ", cancelled)
+end
+
+function OmniTest(bp)
+    micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", TestECB, TestDoneCB)
+
+
+end
+
+
 function init()
-  -- config.MakeCommand("fzfinder", fzfinder, config.NoComplete)
-  config.MakeCommand("OmniContent", OmniContent, config.NoComplete)
-  config.MakeCommand("OmniCenter", OmniCenter, config.NoComplete)
+    -- config.MakeCommand("fzfinder", fzfinder, config.NoComplete)
+    config.MakeCommand("OmniContent", OmniContent, config.NoComplete)
+    config.MakeCommand("OmniCenter", OmniCenter, config.NoComplete)
+
+    config.MakeCommand("OmniTest", OmniTest, config.NoComplete)
+
+  
 end
