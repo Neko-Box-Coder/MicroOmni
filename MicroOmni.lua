@@ -173,6 +173,7 @@ function OmniSelect(bp, args)
     -- micro.Log("targetLine: ", targetLine)
 
     -- cursor:SetSelectionStart(currentLoc)
+    cursor:GotoLoc(buffer.Loc(currentLoc.X, targetLine))
     cursor:SelectTo(buffer.Loc(currentLoc.X, targetLine))
     bp:Relocate()
 end
