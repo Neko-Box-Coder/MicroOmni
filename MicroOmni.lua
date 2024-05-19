@@ -96,7 +96,7 @@ function FindContent(str)
     if os == "Unix" then
         finalCmd = "sh -c \'"..finalCmd.."\'"
     else
-        finalCmd = "cmd /s /v /c \'"..finalCmd.."\'"
+        finalCmd = "cmd /s /v /c "..finalCmd..""
     end
 
     -- micro.Log("Running search cmd: ", finalCmd)
