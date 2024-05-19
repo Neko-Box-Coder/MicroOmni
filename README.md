@@ -18,6 +18,7 @@ List of features not in any particular order:
 
 ### Installation
 This is still a WIP plugin so don't have any releases yet. To use this, you will need to clone it.
+
 `git clone https://github.com/Neko-Box-Coder/MicroOmni` to your micro `plug` directory
 
 
@@ -39,7 +40,7 @@ All of these are available for Unix and Windows
 
 ### Settings
 - `OmniContentArgs`: Argument to be passed to fzf. Recommend the set to either the following:
-    - `"--delimiter : -i --preview-window +{2}-/2 --preview 'bat -f -n --highlight-line {2} {1}'"`
+    - `"--delimiter : -i --preview-window +{2}-/2 --preview \"bat -f -n --highlight-line {2} {1}\"`
     - `"-i"`
 - `OmniSelectType`: Either `"relative"` or `"absolute"` to for target line number
     - Defaults to `"relative"`
@@ -51,6 +52,5 @@ All of these are available for Unix and Windows
     - `vsplit`: Opens in new pane as vertical split
     - `hsplit`: Opens in new pane as horizontal split
     - `thispane`: (Default) Opens in current pane
-- `fzfpath`: The root path to search from, can be absolute path or relative to open file by
-setting to `relative`.
+- `fzfpath`: The root path to search from, can be absolute path or relative to open file by setting to `relative`.
     -If empty or not specified, defaults to directory where micro was launched

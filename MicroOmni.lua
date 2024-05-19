@@ -8,6 +8,7 @@ local filepath = import("path/filepath")
 local action = import("micro/action")
 local util = import("micro/util")
 local screen = import("micro/screen")
+local runtime = import("runtime")
 
 local OmniContentArgs =  config.GetGlobalOption("OmniContentArgs")
 local OmniSelectType = config.GetGlobalOption("OmniSelectType")
@@ -19,21 +20,11 @@ local fzfPath = config.GetGlobalOption("fzfpath")
 
 
 function getOS()
-    -- ask LuaJIT first
-    -- if jit then
-    --   return jit.os
-    -- end
-
-    -- Unix, Linux variants
-    local fh, err = assert(io.popen("uname -o 2>/dev/null","r"))
-
-    if fh then
+    if runtime.GOOS == "windows" then
+        return "Windows"
+    else
         return "Unix"
-        -- osname = fh:read()
     end
-
-    -- return osname or "Windows"
-    return "Windows"
 end
 
 function setupFzf(bp)
@@ -92,8 +83,8 @@ function FindContent(str)
         selectedText = selectedText:gsub("'", "'\\''")
         fzfArgs = OmniContentArgs:gsub("'", "'\\''")
     else
-        selectedText = selectedText:gsub('["%%]', '^%1')
-        fzfArgs = OmniContentArgs:gsub('["%%]', '^%1')
+        selectedText = selectedText:gsub("'", '"')
+        fzfArgs = OmniContentArgs:gsub("'", '"')
     end
 
     -- micro.Log("selectedText after: ", selectedText)
@@ -105,7 +96,7 @@ function FindContent(str)
     if os == "Unix" then
         finalCmd = "sh -c \'"..finalCmd.."\'"
     else
-        finalCmd = "cmd /s /v /c \""..finalCmd.."\""
+        finalCmd = "cmd /s /v /c \'"..finalCmd.."\'"
     end
 
     -- micro.Log("Running search cmd: ", finalCmd)
