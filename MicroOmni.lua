@@ -82,26 +82,37 @@ function FindContent(str)
 
     setupFzf(bp)
     local selectedText = util.String(str)
+    local fzfArgs = ""
 
+    -- micro.Log("selectedText before: ", selectedText)
+    -- micro.Log("OmniContentArgs before: ", OmniContentArgs)
+    
+    local os = getOS()
     if os == "Unix" then
-        selectedText:gsub("'", "'\\''")
+        selectedText = selectedText:gsub("'", "'\\''")
+        fzfArgs = OmniContentArgs:gsub("'", "'\\''")
     else
-        selectedText:gsub('["%%]', '^%1')
+        selectedText = selectedText:gsub('["%%]', '^%1')
+        fzfArgs = OmniContentArgs:gsub('["%%]', '^%1')
     end
 
-    local grepCmd = "grep -T -I -i -r -n -o -E \".{0,50}"..selectedText..".{0,50}\" | "
-    local finalCmd = grepCmd..fzfCmd.." "..OmniContentArgs.." -q \""..selectedText.."\""
+    -- micro.Log("selectedText after: ", selectedText)
+    -- micro.Log("OmniContentArgs after: ", fzfArgs)
 
-    local os = getOS()
+    local grepCmd = "grep -I -i -r -n \""..selectedText.."\" | "
+    local finalCmd = grepCmd..fzfCmd.." "..fzfArgs.." -q \""..selectedText.."\""
+
     if os == "Unix" then
         finalCmd = "sh -c \'"..finalCmd.."\'"
     else
         finalCmd = "cmd /s /v /c \""..finalCmd.."\""
     end
 
+    -- micro.Log("Running search cmd: ", finalCmd)
+
     local output, err = shell.RunInteractiveShell(finalCmd, false, true)
 
-    if err ~= nil then
+    if err ~= nil or output == "--" then
         -- micro.InfoBar():Error("Error is: ", err:Error())
     else
         local filePath, lineNumber = output:match("^(.-):%s*(%d+):")
