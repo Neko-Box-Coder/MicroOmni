@@ -9,24 +9,30 @@ local action = import("micro/action")
 local util = import("micro/util")
 local screen = import("micro/screen")
 local runtime = import("runtime")
-
-
 local os = import("os")
 
 
 
 
--- local OmniContentInputArgs = config.GetGlobalOption("OmniContentInputArgs")
 local OmniContentArgs = config.GetGlobalOption("OmniContentArgs")
 local OmniSelectType = config.GetGlobalOption("OmniSelectType")
-
 local fzfCmd =  config.GetGlobalOption("fzfcmd")
 local fzfOpen = config.GetGlobalOption("fzfopen")
 
 
+local OmniCursorHistory = {}
+local OmniCursorIndices = 
+{
+    StartIndex = 0,
+    EndIndex = 0,
+    CurrentIndex = 0,
+}
+local OmniCursorFilePathMap = {}
+local OmniCursorReverseFilePathMap = {}
+
+
 local OmniContentFindPath = ""
 local OmniSearchText = ""
--- local fzfPath = config.GetGlobalOption("fzfpath")
 
 
 
@@ -63,9 +69,9 @@ function OmniContent(bp)
     if bp.Cursor:HasSelection() then
         OmniSearchText = bp.Cursor:GetSelection()
         OmniSearchText = util.String(OmniSearchText)
-        micro.InfoBar():Prompt("Search Directory ({fileDir}) > ", "", "", nil, OnSearchDirSetDone)
+        micro.InfoBar():Prompt("Search Directory ({fileDir} for current file directory) > ", "", "", nil, OnSearchDirSetDone)
     else
-        micro.InfoBar():Prompt("Search Directory ({fileDir}) > ", "", "", nil, OnSearchDirSetDone)
+        micro.InfoBar():Prompt("Search Directory ({fileDir} for current file directory) > ", "", "", nil, OnSearchDirSetDone)
     end
 end
 
@@ -75,7 +81,7 @@ function OnSearchDirSetDone(resp, cancelled)
     local bp = micro.CurPane()
     if bp == nil then return end
     
-    OmniContentFindPath = resp:gsub("{fileDir}", filepath.Dir(bp.buf.Path))
+    OmniContentFindPath = resp:gsub("{fileDir}", filepath.Dir(bp.buf.AbsPath))
 
     if OmniSearchText == "" then
         micro.InfoBar():Prompt("Content to find > ", "", "", nil, OnFindPromptDone)
@@ -125,7 +131,7 @@ function FindContent(str, searchLoc)
 
     local bp = micro.CurPane()
 
-    micro.InfoBar():Message("Find Content called")
+    -- micro.InfoBar():Message("Find Content called")
 
     setupFzf(bp)
     -- local selectedText = util.String(str)
@@ -180,7 +186,7 @@ function FindContent(str, searchLoc)
         bp:CdCmd({searchLoc})
     end
 
-    micro.InfoBar():Message("finalCmd: ", finalCmd)
+    -- micro.InfoBar():Message("finalCmd: ", finalCmd)
 
     local output, err = shell.RunInteractiveShell(finalCmd, false, true)
 
@@ -207,7 +213,6 @@ function fzfParseOutput(output, bp, lineNum)
         end
 
         -- micro.Log("fzfParseOutput starts")
-
         -- micro.InfoBar():Message("file is ", file)
 
         if fzfOpen == "newtab" then
@@ -224,10 +229,7 @@ function fzfParseOutput(output, bp, lineNum)
         end
 
         -- micro.Log("fzfParseOutput new buffer")
-
-
         micro.CurPane():GotoCmd({lineNum})
-
         -- micro.Log("fzfParseOutput new line")
     end
 end
@@ -272,11 +274,53 @@ end
 
 
 function GoToPreviousHistory(bp)
-    -- TODO(NOW): Trverse the list
+    if #OmniCursorHistory == 0 or OmniCursorIndices.CurrentIndex <= OmniCursorIndices.StartIndex then
+        return
+    end
 
+    OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex - 1;
+    micro.Log("Going to previous, index ", OmniCursorIndices.CurrentIndex)
+    GoToHistoryEntry(bp, OmniCursorHistory[OmniCursorIndices.CurrentIndex])
 end
 
+function GoToNextHistory(bp)
+    if #OmniCursorHistory == 0 or OmniCursorIndices.CurrentIndex >= OmniCursorIndices.EndIndex then
+        return
+    end
 
+    OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex + 1;
+    micro.Log("Going to next, index ", OmniCursorIndices.CurrentIndex)
+    GoToHistoryEntry(bp, OmniCursorHistory[OmniCursorIndices.CurrentIndex])
+end
+
+function GoToHistoryEntry(bp, entry)
+    micro.Log("GoToHistoryEntry called")
+    micro.Log(  "Goto Entry: ", OmniCursorFilePathMap[entry.FileId], 
+                ", ", entry.CursorLoc.X, ", ", entry.CursorLoc.Y)
+
+    local entryFilePath = OmniCursorFilePathMap[entry.FileId]
+
+    micro.Log("We have ", #micro.Tabs().List, " tabs")
+    for i = 1, #micro.Tabs().List do
+        -- micro.Log("Tab ", i, " has ", #micro.Tabs().List[i].Panes, " panes")
+        for j = 1, #micro.Tabs().List[i].Panes do
+            local currentPane = micro.Tabs().List[i].Panes[j]
+            local currentBuf = currentPane.Buf
+            if currentBuf ~= nil and currentBuf.AbsPath == entryFilePath then
+                currentPane.Cursor:GotoLoc(entry.CursorLoc)
+
+                -- NOTE: SetActive functions has index starting at 0 instead lol
+                micro.Tabs():SetActive(i - 1)
+                micro.Tabs().List[i]:SetActive(j - 1)
+                currentPane:Relocate()
+                return
+            end
+        end
+    end
+
+    bp.Cursor:GotoLoc(entry.CursorLoc)
+    bp:Relocate()
+end
 
 
 function TestECB(msg)
@@ -287,23 +331,118 @@ function TestDoneCB(msg, cancelled)
     micro.Log("TestDoneCB called with message ", msg, " and cancelled ", cancelled)
 end
 
+function LuaCopy(obj, seen)
+    if type(obj) ~= 'table' then return obj end
+    if seen and seen[obj] then return seen[obj] end
+    local s = seen or {}
+    local res = setmetatable({}, getmetatable(obj))
+    s[obj] = res
+    for k, v in pairs(obj) do res[copy(k, s)] = copy(v, s) end
+    return res
+end
+
+function CopyLoc(loc)
+    return buffer.Loc(loc.X, loc.Y)
+end
+
 function onAnyEvent()
-    -- micro.Log("onAnyEvent called")
-    if micro.CurPane() == nil or micro.CurPane().Cursor == nil then
+    micro.Log("onAnyEvent called")
+    if  micro.CurPane() == nil or micro.CurPane().Cursor == nil or micro.CurPane().Buf == nil then
         return
     end
     
     local currentCursorLoc = micro.CurPane().Cursor.Loc
-    local bufPath = micro.CurPane().Buf.Path
-    
-    micro.Log("In ", bufPath, ":", currentCursorLoc.X, currentCursorLoc.Y)
+    local bufPath = micro.CurPane().Buf.AbsPath
+    local currentHistorySize = #OmniCursorHistory
 
-    -- TODO(NOW):   Check if the cursor is different. 
-    --              If so, check if it is because we are traversing in history. 
-    --                  If not, check if we are at the of the history
-    --                      If so, Just append the new history
-    --                      If not, remove the rest of the list items, then append
+    if bufPath == nil or bufPath == "" then
+        return
+    end
 
+    -- Check bufPath exists and is a file
+    if not path_exists(bufPath) or IsPathDir(bufPath) then
+        return
+    end
+
+    -- micro.Log("onAnyEvent called")
+    -- micro.Log("currentCursorLoc: ", currentCursorLoc.X, ", ", currentCursorLoc.Y)
+    -- micro.Log("bufPath: ", bufPath)
+    -- micro.Log("currentHistorySize: ", currentHistorySize)
+
+    -- If we haven't see this path
+    if OmniCursorReverseFilePathMap[bufPath] == nil then
+        OmniCursorFilePathMap[#OmniCursorFilePathMap + 1] = bufPath
+        OmniCursorReverseFilePathMap[bufPath] = #OmniCursorFilePathMap
+    end
+
+    -- If first entry, just append
+    if currentHistorySize == 0 then
+        -- Append current cursor and return
+        OmniCursorHistory[1] = 
+        {
+            FileId = OmniCursorReverseFilePathMap[bufPath],
+            CursorLoc = CopyLoc(currentCursorLoc)
+        }
+        OmniCursorIndices.StartIndex = 1
+        OmniCursorIndices.EndIndex = 1
+        OmniCursorIndices.CurrentIndex = 1
+        return
+    end
+
+    local currentHistory = OmniCursorHistory[OmniCursorIndices.CurrentIndex]
+
+    -- If difference is too less, then just leave it
+    if  currentHistory.FileId == OmniCursorReverseFilePathMap[bufPath] and 
+        math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y) < 5 then
+
+        -- micro.Log("currentHistory.CursorLoc.Y: ", currentHistory.CursorLoc.Y)
+        -- micro.Log("math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y): ", math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y))
+
+        -- Just update X if on the same line
+        if currentHistory.CursorLoc.Y == currentCursorLoc.Y then
+            -- micro.Log("currentHistory.CursorLoc.X: ", currentHistory.CursorLoc.X)
+            -- micro.Log("currentCursorLoc.X: ", currentCursorLoc.X)
+            OmniCursorHistory[OmniCursorIndices.CurrentIndex].CursorLoc = CopyLoc(currentCursorLoc)
+            -- currentHistory.CursorLoc.X = currentCursorLoc.X
+        end
+
+        return
+    end
+
+    OmniCursorHistory[OmniCursorIndices.CurrentIndex + 1] = 
+    {
+        FileId = OmniCursorReverseFilePathMap[bufPath],
+        CursorLoc = CopyLoc(currentCursorLoc)
+    }
+
+    OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex + 1
+
+    -- If we are not at the end of the history, we will need to remove the rest of the history until the end
+    if OmniCursorIndices.EndIndex > OmniCursorIndices.CurrentIndex  then
+        for i = OmniCursorIndices.CurrentIndex + 1, OmniCursorIndices.EndIndex do
+            OmniCursorHistory[i] = nil
+        end
+    end
+
+    OmniCursorIndices.EndIndex = OmniCursorIndices.CurrentIndex
+
+    currentHistorySize = #OmniCursorHistory
+
+    -- Remove the first entry if we have more than 256 entries. Just to keep it small
+    if currentHistorySize > 256 then
+        OmniCursorHistory[OmniCursorIndices.StartIndex] = nil
+        OmniCursorIndices.StartIndex = OmniCursorIndices.StartIndex + 1
+    end
+
+    -- Debug log printing the whole cursor history
+    for i = OmniCursorIndices.StartIndex, OmniCursorIndices.EndIndex do
+        if i == OmniCursorIndices.CurrentIndex then
+            micro.Log("Current Index")
+        end
+
+        micro.Log(  "Cursor History at ", i, ": ",  OmniCursorFilePathMap[OmniCursorHistory[i].FileId], 
+                    ", ", OmniCursorHistory[i].CursorLoc.X, ", ", OmniCursorHistory[i].CursorLoc.Y)
+    end
 
     
 end
@@ -326,6 +465,9 @@ function init()
     config.MakeCommand("OmniFind", OmniContent, config.NoComplete)
     config.MakeCommand("OmniCenter", OmniCenter, config.NoComplete)
     config.MakeCommand("OmniJumpSelect", OmniSelect, config.NoComplete)
+    config.MakeCommand("OmniPreviousHistory", GoToPreviousHistory, config.NoComplete)
+    config.MakeCommand("OmniNextHistory", GoToNextHistory, config.NoComplete)
+
 
     config.MakeCommand("OmniTest", OmniTest, config.NoComplete)
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)
