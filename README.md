@@ -3,11 +3,11 @@
 Just a swiss army knife plugin that adds the functionalities I have from VSCodium.
 
 List of features not in any particular order:
-- fuzzy search for files recursively
+- ⚙️ Fuzzy Search For Files Recursively
     - This extends from fzfinder, but can work independently
-- Centering cursor to viewport
-- Jump Selection
-- (WIP) Global Cursor History
+- 🔲 Centering Cursor To Viewport
+- 🦘 Jump Selection
+- 📔 Global Cursor History
 - (WIP) Bracket jumping without on top of it
 - (WIP) Contect selection within brackets
 - (WIP) Diff view
@@ -22,7 +22,7 @@ This is still a WIP plugin so don't have any releases yet. To use this, you will
 
 
 ## 📐 Requirements
-- micro (from [my branch](https://github.com/Neko-Box-Coder/micro-dev) for now due to bug)
+- micro (from [my branch](https://github.com/Neko-Box-Coder/micro-dev) for now due to a [bug](https://github.com/zyedidia/micro/pull/3318))
 - fzf
 - ripgrep
 - bat
@@ -36,43 +36,31 @@ All of these are available for Unix and Windows
 >
 > [https://github.com/sharkdp/bat/releases](https://github.com/sharkdp/bat/releases)
 
-## 🔍️ Finding files recursively with fzf
+## 🔍️ Fuzzy Search For Files Recursively
 
-To find a with keyword(s), launch command `OmniFind` which is bindable to a key.
+Recommended binding:
+```json
+{
+    "Alt-F": "command:OmniSearch",
+    //Windows
+    "Alt-Shift-F": "command:OmniSearch"
+}
+```
+
+To find a with keyword(s), launch command `OmniSearch` which is bindable to a key.
 1. First it will ask you which directory to search from, if a relative path is give, 
 this will be relative to current working directory (not to be confused with current file directory).
 Leaving empty will default to current working directory.
     - `{fileDir}` can be used to substitute the directory path of the current file. 
-2. If any text was selected prior to launching the `OmniFind` command, that text will be used
-for searching. If not, a prompt will ask you what to search.
+2. If any text was selected prior to launching the `OmniSearch` command, that text will be used
+for **fuzzy** searching. If not, a prompt will ask you what to search.
 3. If successful, a fzf window will be launched. Here are the keybindings by default:
     - up/down: Navigate results
     - alt-up / alt-down: Navigate half page of results
     - page-up / page-down: Scroll up and down for the preview window
+    - alt-f: Search again with text in the input field (**Non fuzzy** but case insensitive)
 
-
-> [!CAUTION] 
-> The rest of this README is still work in progress and incomplete
-
-
-
-### Keybindings/Commands
-- `OmniCenter`: Centers your cursor to the middle of the viewport
-- `OmniContent`: Searches all the file contents recursively with whatever is selected or entered
-- `OmniSelect`: Selects from current cursor position to either relative line or absolute line
-    - This is meant to be used as a command, so bind it like this `"command-edit:OmniSelect "`
-
-
-
-
-
-### Settings
-- `OmniContentArgs`: Argument to be passed to fzf. Recommend the set to either the following:
-    - `"--delimiter : -i --preview-window +{2}-/2 --preview \"bat -f -n --highlight-line {2} {1}\"`
-    - `"-i"`
-- `OmniSelectType`: Either `"relative"` or `"absolute"` to for target line number
-    - Defaults to `"relative"`
-
+### ⚙️ Fuzzy Search Settings
 - `fzfCmd`: (Extending from fzfinder) The `fzf` location.
     - Defaults to `"fzf"`
 - `fzfOpen`: (Extending from fzfinder) How to open the new file. Available options are:
@@ -80,6 +68,63 @@ for searching. If not, a prompt will ask you what to search.
     - `newtab`: Opens in new tab
     - `vsplit`: Opens in new pane as vertical split
     - `hsplit`: Opens in new pane as horizontal split
+- `OmniContentArgs`: Argument to be passed to fzf. It defaults to the following:
+```lua
+OmniContentArgs =   "--bind 'alt-f:reload:rg -i -uu -n {q}' "..
+                    "--delimiter : -i "..
+                    "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+                    "alt-up:half-page-up,alt-down:half-page-down "..
+                    "--preview-window '+{2}-/2' "..
+                    "--preview 'bat -f -n --highlight-line {2} {1}'"
+```
+
+## 🔲 Centering Cursor To Viewport
+
+Recommended binding:
+```json
+{
+    "Alt-m": "command:OmniCenter"
+}
+```
+
+It centers your cursor to the middle of your viewport.
+
+## 🦘 Jump Selection
+
+Recommended binding:
+```json
+{
+    "Alt-J": "command-edit:OmniJumpSelect ",
+    //Windows
+    "Alt-Shift-J": "command-edit:OmniJumpSelect "
+}
+```
+
+To select a section based on line number, launch the `OmniJumpSelect` command with 
+the line number specified. 
+
+By default it uses relative line numbers, so 5 is 5 lines down and -5 is 5 lines up.
+This can be configured to use absolute line number. See settings.
+
+### ⚙️ Jump Selection Type Settings
+- `OmniSelectType`: Sets the jump selection type. Can either be `relative` (default) or `absolute`
+
+
+## 📔 Global Cursor History
+
+Recommended binding:
+```json
+{
+    "Alt-{": "command:OmniPreviousHistory",
+    "Alt-}": "command:OmniNextHistory"
+}
+```
+
+When you are editing multiple files or jumping between different functions, 
+a history of the cursor location is stored. You can go to previous or next cursor position
+by launching the `OmniPreviousHistory` and `OmniNextHistory` commands.
+
+This is similar to the navigate back and forward commands in VSCode
 
 <!-- - `fzfpath`: The root path to search from, can be absolute path or relative to open file by setting to `relative`. -->
 <!--     -If empty or not specified, defaults to directory where micro was launched -->

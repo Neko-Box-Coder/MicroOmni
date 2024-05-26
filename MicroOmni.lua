@@ -56,7 +56,6 @@ end
 
 function OmniContent(bp)
     if OmniContentArgs == nil or OmniContentArgs == "" then
-        -- OmniContentArgs =   "--bind 'start:reload:rg -i -uu -n {q}' "..
         OmniContentArgs =   "--bind 'alt-f:reload:rg -i -uu -n {q}' "..
                             "--delimiter : -i "..
                             "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
@@ -128,16 +127,12 @@ end
 
 
 function FindContent(str, searchLoc)
-
+    micro.Log("Find Content called")
     local bp = micro.CurPane()
-
-    -- micro.InfoBar():Message("Find Content called")
-
     setupFzf(bp)
-    -- local selectedText = util.String(str)
+
     local selectedText = str
     local fzfArgs = ""
-
     -- micro.Log("selectedText before: ", selectedText)
     -- micro.Log("OmniContentArgs before: ", OmniContentArgs)
 
@@ -159,7 +154,6 @@ function FindContent(str, searchLoc)
         fzfArgs = OmniContentArgs:gsub("'", '"')
     end
 
-
     local finalCmd = "rg -i -uu -n \""..firstWord.."\" | "..fzfCmd.." "..fzfArgs.." -q \""..selectedText.."\""
 
     if currentOS == "Unix" then
@@ -168,10 +162,9 @@ function FindContent(str, searchLoc)
         finalCmd = "cmd /s /v /c "..finalCmd..""
     end
 
-    -- micro.Log("Running search cmd: ", finalCmd)
+    micro.Log("Running search cmd: ", finalCmd)
 
     local currentLoc = os.Getwd()
-
     if searchLoc ~= nil and searchLoc ~= "" then
         if not path_exists(searchLoc) then
             micro.InfoBar():Error("", searchLoc, " doesn't exist")
@@ -186,8 +179,6 @@ function FindContent(str, searchLoc)
         bp:CdCmd({searchLoc})
     end
 
-    -- micro.InfoBar():Message("finalCmd: ", finalCmd)
-
     local output, err = shell.RunInteractiveShell(finalCmd, false, true)
 
     if searchLoc ~= nil and searchLoc ~= "" then
@@ -198,13 +189,13 @@ function FindContent(str, searchLoc)
         -- micro.InfoBar():Error("Error is: ", err:Error())
     else
         local filePath, lineNumber = output:match("^(.-):%s*(%d+):")
-        -- lineNumber = tonumber(lineNumber)
         fzfParseOutput(filePath, bp, lineNumber)
     end
 end
 
 
 function fzfParseOutput(output, bp, lineNum)
+    micro.Log("fzfParseOutput called")
     if output ~= "" then
         local file = string.gsub(output, "[\n\r]", "")
     
@@ -212,7 +203,6 @@ function fzfParseOutput(output, bp, lineNum)
             return
         end
 
-        -- micro.Log("fzfParseOutput starts")
         -- micro.InfoBar():Message("file is ", file)
 
         if fzfOpen == "newtab" then
@@ -236,19 +226,29 @@ end
 
 function OmniCenter(bp)
     local view = bp:GetView()
+    local oriX = bp.Cursor.Loc.X
     bp.Cursor:ResetSelection()
     bp.Buf:ClearCursors()
-    bp.Cursor:GotoLoc(buffer.Loc(view.StartCol, view.StartLine.Line + view.Height / 2))
+
+    local targetLineY = view.StartLine.Line + view.Height / 2
+    local lineLength = util.CharacterCountInString(bp.Buf:Line(targetLineY))
+    local centerX;
+
+    if oriX >= lineLength then
+        centerX = lineLength
+    else
+        centerX = oriX
+    end
+    
+    bp.Cursor:GotoLoc(buffer.Loc(centerX, targetLineY))
 end
 
 function OmniSelect(bp, args)
     if #args < 1 then return end
 
     local buf = bp.Buf
-    -- local bufLineNum = buf:LinesNum()
     local cursor = buf:GetActiveCursor()
     local currentLoc = cursor.Loc
-    -- local currentLine = cursor.Loc.Y
     local targetLine = cursor.Loc.Y
 
     cursor.OrigSelection[1] = buffer.Loc(cursor.Loc.X, cursor.Loc.Y)
@@ -265,8 +265,6 @@ function OmniSelect(bp, args)
 
     -- micro.InfoBar():Message("targetLine: ", targetLine)
     -- micro.Log("targetLine: ", targetLine)
-
-    -- cursor:SetSelectionStart(currentLoc)
     cursor:GotoLoc(buffer.Loc(currentLoc.X, targetLine))
     cursor:SelectTo(buffer.Loc(currentLoc.X, targetLine))
     bp:Relocate()
@@ -300,7 +298,7 @@ function GoToHistoryEntry(bp, entry)
 
     local entryFilePath = OmniCursorFilePathMap[entry.FileId]
 
-    micro.Log("We have ", #micro.Tabs().List, " tabs")
+    -- micro.Log("We have ", #micro.Tabs().List, " tabs")
     for i = 1, #micro.Tabs().List do
         -- micro.Log("Tab ", i, " has ", #micro.Tabs().List[i].Panes, " panes")
         for j = 1, #micro.Tabs().List[i].Panes do
@@ -364,7 +362,6 @@ function onAnyEvent()
         return
     end
 
-    -- micro.Log("onAnyEvent called")
     -- micro.Log("currentCursorLoc: ", currentCursorLoc.X, ", ", currentCursorLoc.Y)
     -- micro.Log("bufPath: ", bufPath)
     -- micro.Log("currentHistorySize: ", currentHistorySize)
@@ -395,15 +392,11 @@ function onAnyEvent()
     if  currentHistory.FileId == OmniCursorReverseFilePathMap[bufPath] and 
         math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y) < 5 then
 
-        -- micro.Log("currentHistory.CursorLoc.Y: ", currentHistory.CursorLoc.Y)
-        -- micro.Log("math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y): ", math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y))
-
         -- Just update X if on the same line
         if currentHistory.CursorLoc.Y == currentCursorLoc.Y then
             -- micro.Log("currentHistory.CursorLoc.X: ", currentHistory.CursorLoc.X)
             -- micro.Log("currentCursorLoc.X: ", currentCursorLoc.X)
             OmniCursorHistory[OmniCursorIndices.CurrentIndex].CursorLoc = CopyLoc(currentCursorLoc)
-            -- currentHistory.CursorLoc.X = currentCursorLoc.X
         end
 
         return
@@ -435,16 +428,14 @@ function onAnyEvent()
     end
 
     -- Debug log printing the whole cursor history
-    for i = OmniCursorIndices.StartIndex, OmniCursorIndices.EndIndex do
-        if i == OmniCursorIndices.CurrentIndex then
-            micro.Log("Current Index")
-        end
-
-        micro.Log(  "Cursor History at ", i, ": ",  OmniCursorFilePathMap[OmniCursorHistory[i].FileId], 
-                    ", ", OmniCursorHistory[i].CursorLoc.X, ", ", OmniCursorHistory[i].CursorLoc.Y)
-    end
-
-    
+--     for i = OmniCursorIndices.StartIndex, OmniCursorIndices.EndIndex do
+--         if i == OmniCursorIndices.CurrentIndex then
+--             micro.Log("Current Index")
+--         end
+-- 
+--         micro.Log(  "Cursor History at ", i, ": ",  OmniCursorFilePathMap[OmniCursorHistory[i].FileId], 
+--                     ", ", OmniCursorHistory[i].CursorLoc.X, ", ", OmniCursorHistory[i].CursorLoc.Y)
+--     end
 end
 
 function OmniTest(bp, args)
@@ -462,7 +453,7 @@ end
 
 function init()
     -- config.MakeCommand("fzfinder", fzfinder, config.NoComplete)
-    config.MakeCommand("OmniFind", OmniContent, config.NoComplete)
+    config.MakeCommand("OmniSearch", OmniContent, config.NoComplete)
     config.MakeCommand("OmniCenter", OmniCenter, config.NoComplete)
     config.MakeCommand("OmniJumpSelect", OmniSelect, config.NoComplete)
     config.MakeCommand("OmniPreviousHistory", GoToPreviousHistory, config.NoComplete)
