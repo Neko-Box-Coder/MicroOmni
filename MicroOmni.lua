@@ -16,6 +16,7 @@ local os = import("os")
 
 local OmniContentArgs = config.GetGlobalOption("OmniContentArgs")
 local OmniSelectType = config.GetGlobalOption("OmniSelectType")
+local OmniHistoryLineDiff = config.GetGlobalOption("OmniHistoryLineDiff")
 local fzfCmd =  config.GetGlobalOption("fzfcmd")
 local fzfOpen = config.GetGlobalOption("fzfopen")
 
@@ -231,6 +232,16 @@ function OmniCenter(bp)
     bp.Buf:ClearCursors()
 
     local targetLineY = view.StartLine.Line + view.Height / 2
+    local totalNumOfLines = bp.Buf:LinesNum()
+
+    if targetLineY >= totalNumOfLines then
+        targetLineY = totalNumOfLines - 1
+    end
+
+    if targetLineY < 0 then
+        targetLineY = 0
+    end
+
     local lineLength = util.CharacterCountInString(bp.Buf:Line(targetLineY))
     local centerX;
 
@@ -277,7 +288,7 @@ function GoToPreviousHistory(bp)
     end
 
     OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex - 1;
-    micro.Log("Going to previous, index ", OmniCursorIndices.CurrentIndex)
+    micro.InfoBar():Message("Going to previous history at index ", OmniCursorIndices.CurrentIndex)
     GoToHistoryEntry(bp, OmniCursorHistory[OmniCursorIndices.CurrentIndex])
 end
 
@@ -287,7 +298,7 @@ function GoToNextHistory(bp)
     end
 
     OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex + 1;
-    micro.Log("Going to next, index ", OmniCursorIndices.CurrentIndex)
+    micro.InfoBar():Message("Going to next history at index ", OmniCursorIndices.CurrentIndex)
     GoToHistoryEntry(bp, OmniCursorHistory[OmniCursorIndices.CurrentIndex])
 end
 
@@ -318,15 +329,6 @@ function GoToHistoryEntry(bp, entry)
 
     bp.Cursor:GotoLoc(entry.CursorLoc)
     bp:Relocate()
-end
-
-
-function TestECB(msg)
-    micro.Log("TestECV called with message: ", msg)
-end
-
-function TestDoneCB(msg, cancelled)
-    micro.Log("TestDoneCB called with message ", msg, " and cancelled ", cancelled)
 end
 
 function LuaCopy(obj, seen)
@@ -367,7 +369,7 @@ function onAnyEvent()
     -- micro.Log("currentHistorySize: ", currentHistorySize)
 
     -- If we haven't see this path
-    if OmniCursorReverseFilePathMap[bufPath] == nil then
+    if  OmniCursorReverseFilePathMap[bufPath] == nil then
         OmniCursorFilePathMap[#OmniCursorFilePathMap + 1] = bufPath
         OmniCursorReverseFilePathMap[bufPath] = #OmniCursorFilePathMap
     end
@@ -390,7 +392,7 @@ function onAnyEvent()
 
     -- If difference is too less, then just leave it
     if  currentHistory.FileId == OmniCursorReverseFilePathMap[bufPath] and 
-        math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y) < 5 then
+        math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y) < OmniHistoryLineDiff then
 
         -- Just update X if on the same line
         if currentHistory.CursorLoc.Y == currentCursorLoc.Y then
@@ -438,6 +440,53 @@ function onAnyEvent()
 --     end
 end
 
+-- See issue https://github.com/zyedidia/micro/issues/3320
+-- Modified from https://github.com/kaarrot/microgrep/blob/e1a32e8b95397a40e5dda0fb43e7f8d17469b88c/microgrep.lua#L118
+function WriteToClipboardWorkaround(content)
+    if micro.CurPane() == nil then return end
+
+    local curTab = micro.CurPane():Tab()
+    local curPaneId = micro.CurPane():ID()
+    local curPaneIndex = curTab:GetPane(curPaneId)
+
+    -- Split pane in half and add some text
+    micro.CurPane():HSplitAction()
+    
+    local buf,err = buffer.NewBuffer(content, "")
+    -- Workaround to copy path to clioboard
+    micro.CurPane():OpenBuffer(buf)
+    micro.CurPane():SelectAll()
+    micro.CurPane():Copy()
+    micro.CurPane():ForceQuit() -- Close current buffer pane
+
+    curTab:SetActive(curPaneIndex)
+end
+
+function OmniCopyRelativePath(bp)
+    if bp.Buf == nil then return end
+
+    -- clipboard.Write(bp.Buf.Path, clipboard.ClipboardReg)
+    WriteToClipboardWorkaround(bp.Buf.Path)
+    micro.InfoBar():Message(bp.Buf.Path, " copied into clipboard")
+end
+
+function OmniCopyAbsolutePath(bp)
+    if bp.Buf == nil then return end
+    
+    -- clipboard.Write(bp.Buf.AbsPath, clipboard.ClipboardReg)
+    WriteToClipboardWorkaround(bp.Buf.AbsPath)
+    micro.InfoBar():Message(bp.Buf.AbsPath, " copied into clipboard")
+end
+
+
+function TestECB(msg)
+    micro.Log("TestECV called with message: ", msg)
+end
+
+function TestDoneCB(msg, cancelled)
+    micro.Log("TestDoneCB called with message ", msg, " and cancelled ", cancelled)
+end
+
 function OmniTest(bp, args)
     -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", TestECB, TestDoneCB)
     bp:CdCmd(args)
@@ -459,7 +508,19 @@ function init()
     config.MakeCommand("OmniPreviousHistory", GoToPreviousHistory, config.NoComplete)
     config.MakeCommand("OmniNextHistory", GoToNextHistory, config.NoComplete)
 
+    config.MakeCommand("OmniCopyRelativePath", OmniCopyRelativePath, config.NoComplete)
+    config.MakeCommand("OmniCopyAbsolutePath", OmniCopyAbsolutePath, config.NoComplete)
 
+
+    if OmniHistoryLineDiff == nil or OmniHistoryLineDiff == "" then
+        OmniHistoryLineDiff = 20
+    else
+        OmniHistoryLineDiff = tonumber(OmniHistoryLineDiff)
+        if OmniHistoryLineDiff == nil then
+            OmniHistoryLineDiff = 20
+        end
+    end
+    
     config.MakeCommand("OmniTest", OmniTest, config.NoComplete)
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)
 

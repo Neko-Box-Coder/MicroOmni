@@ -8,10 +8,10 @@ List of features not in any particular order:
 - 🔲 Centering Cursor To Viewport
 - 🦘 Jump Selection
 - 📔 Global Cursor History
+- 📁 Copy Current File Path
 - (WIP) Bracket jumping without on top of it
 - (WIP) Contect selection within brackets
 - (WIP) Diff view
-- (WIP) Copy current file path
 - (WIP) Resize split with keyboard <!-- Using https://github.com/zyedidia/micro/issues/1807#issuecomment-1907899274 -->
 - (WIP) Minimap
 
@@ -126,5 +126,17 @@ by launching the `OmniPreviousHistory` and `OmniNextHistory` commands.
 
 This is similar to the navigate back and forward commands in VSCode
 
+### ⚙️ Global Cursor History Settings
+- `OmniHistoryLineDiff`: Sets how many line difference count as new cursor history. Defaults to 20
+
 <!-- - `fzfpath`: The root path to search from, can be absolute path or relative to open file by setting to `relative`. -->
 <!--     -If empty or not specified, defaults to directory where micro was launched -->
+
+## 📁 Copy Current File Path
+
+Recommended binding:
+
+None (Invoke it in command pane)
+
+You can copy the current file absolute or relative path with `OmniCopyRelativePath` and 
+`OmniCopyAbsolutePath` command.
