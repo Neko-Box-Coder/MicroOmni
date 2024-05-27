@@ -225,33 +225,36 @@ function fzfParseOutput(output, bp, lineNum)
     end
 end
 
+function LocBoundCheck(buf, loc)
+    local totalNumOfLines = buf:LinesNum()
+    local returnLoc = buffer.Loc(loc.X, loc.Y)
+    
+    if loc.Y >= totalNumOfLines then
+        returnLoc = buffer.Loc(returnLoc.X, totalNumOfLines - 1)
+    end
+
+    if loc.Y < 0 then
+        returnLoc = buffer.Loc(returnLoc.X, 0)
+    end
+
+    local lineLength = util.CharacterCountInString(buf:Line(returnLoc.Y))
+
+    if loc.X >= lineLength then
+        returnLoc = buffer.Loc(lineLength - 1, returnLoc.Y)
+    else
+        returnLoc = buffer.Loc(loc.X, returnLoc.Y)
+    end
+
+    return returnLoc
+end
+
 function OmniCenter(bp)
     local view = bp:GetView()
     local oriX = bp.Cursor.Loc.X
     bp.Cursor:ResetSelection()
     bp.Buf:ClearCursors()
-
     local targetLineY = view.StartLine.Line + view.Height / 2
-    local totalNumOfLines = bp.Buf:LinesNum()
-
-    if targetLineY >= totalNumOfLines then
-        targetLineY = totalNumOfLines - 1
-    end
-
-    if targetLineY < 0 then
-        targetLineY = 0
-    end
-
-    local lineLength = util.CharacterCountInString(bp.Buf:Line(targetLineY))
-    local centerX;
-
-    if oriX >= lineLength then
-        centerX = lineLength
-    else
-        centerX = oriX
-    end
-    
-    bp.Cursor:GotoLoc(buffer.Loc(centerX, targetLineY))
+    bp.Cursor:GotoLoc(LocBoundCheck(bp.Buf, buffer.Loc(bp.Cursor.Loc.X, targetLineY)))
 end
 
 function OmniSelect(bp, args)
@@ -316,7 +319,7 @@ function GoToHistoryEntry(bp, entry)
             local currentPane = micro.Tabs().List[i].Panes[j]
             local currentBuf = currentPane.Buf
             if currentBuf ~= nil and currentBuf.AbsPath == entryFilePath then
-                currentPane.Cursor:GotoLoc(entry.CursorLoc)
+                currentPane.Cursor:GotoLoc(LocBoundCheck(currentBuf, entry.CursorLoc))
 
                 -- NOTE: SetActive functions has index starting at 0 instead lol
                 micro.Tabs():SetActive(i - 1)
@@ -479,6 +482,46 @@ function OmniCopyAbsolutePath(bp)
 end
 
 
+function OmniHighlightOnly(bp)
+    local selectionText = ""
+    if bp.Cursor:HasSelection() then
+        selectionText = bp.Cursor:GetSelection()
+        selectionText = util.String(selectionText)
+    end
+    
+    micro.InfoBar():Prompt( "Highlight Then Find (regex) > ", 
+                            selectionText, "", OnTypingHighlight, OnSubmitHighlightFind)
+
+    -- bp.Buf.LastSearch = args[1]
+    -- bp.Buf.LastSearchRegex = true
+    -- bp.Buf.HighlightSearch = true
+end
+
+function OnTypingHighlight(msg)
+    if micro.CurPane() == nil or micro.CurPane().Buf == nil then return end
+
+    local bp = micro.CurPane()
+    bp.Buf.LastSearch = msg
+    bp.Buf.LastSearchRegex = true
+    bp.Buf.HighlightSearch = true
+end
+
+function OnSubmitHighlightFind(msg, cancelled)
+    if micro.CurPane() == nil or micro.CurPane().Buf == nil then return end
+
+    local bp = micro.CurPane()
+    if cancelled then
+        bp.Buf.HighlightSearch = false
+        return
+    end
+
+    bp.Buf.LastSearch = msg
+    bp.Buf.LastSearchRegex = true
+    bp.Buf.HighlightSearch = true
+end
+
+
+
 function TestECB(msg)
     micro.Log("TestECV called with message: ", msg)
 end
@@ -500,29 +543,35 @@ function OmniTest2(bp, args)
 end
 
 
+
 function init()
     -- config.MakeCommand("fzfinder", fzfinder, config.NoComplete)
     config.MakeCommand("OmniSearch", OmniContent, config.NoComplete)
     config.MakeCommand("OmniCenter", OmniCenter, config.NoComplete)
     config.MakeCommand("OmniJumpSelect", OmniSelect, config.NoComplete)
+
     config.MakeCommand("OmniPreviousHistory", GoToPreviousHistory, config.NoComplete)
     config.MakeCommand("OmniNextHistory", GoToNextHistory, config.NoComplete)
 
     config.MakeCommand("OmniCopyRelativePath", OmniCopyRelativePath, config.NoComplete)
     config.MakeCommand("OmniCopyAbsolutePath", OmniCopyAbsolutePath, config.NoComplete)
 
+    config.MakeCommand("OmniHighlightOnly", OmniHighlightOnly, config.NoComplete)
 
+
+    -- Convert history line diff to integer in the beginning
     if OmniHistoryLineDiff == nil or OmniHistoryLineDiff == "" then
-        OmniHistoryLineDiff = 20
+        OmniHistoryLineDiff = 5
     else
         OmniHistoryLineDiff = tonumber(OmniHistoryLineDiff)
         if OmniHistoryLineDiff == nil then
-            OmniHistoryLineDiff = 20
+            OmniHistoryLineDiff = 5
         end
     end
     
     config.MakeCommand("OmniTest", OmniTest, config.NoComplete)
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)
+    config.MakeCommand("OmniTest3", OmniTest3, config.NoComplete)
 
   
 end
