@@ -244,7 +244,7 @@ function LocBoundCheck(buf, loc)
     if lineLength == 0 then
         returnLoc = buffer.Loc(0, returnLoc.Y)
     elseif loc.X >= lineLength then
-        returnLoc = buffer.Loc(lineLength - 1, returnLoc.Y)
+        returnLoc = buffer.Loc(lineLength, returnLoc.Y)
     else
         returnLoc = buffer.Loc(loc.X, returnLoc.Y)
     end
