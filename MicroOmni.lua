@@ -59,10 +59,10 @@ end
 function OmniContent(bp)
     if OmniContentArgs == nil or OmniContentArgs == "" then
         OmniContentArgs =   "--bind 'alt-f:reload:rg -i -uu -n {q}' "..
-                            "--delimiter : -i "..
+                            "--delimiter : -i --reverse "..
                             "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
                             "alt-up:half-page-up,alt-down:half-page-down "..
-                            "--preview-window 'top,+{2}-/2' "..
+                            "--preview-window 'down,+{2}-/2' "..
                             "--preview 'bat -f -n --highlight-line {2} {1}'"
     end
 
@@ -574,10 +574,10 @@ end
 function OmniLocalSearch(bp, args)
     if OmniLocalSearchArgs == nil or OmniLocalSearchArgs == "" then
         OmniLocalSearchArgs =   "--bind 'start:reload:bat -n --decorations always {filePath}' "..
-                                "-i "..
+                                "-i --reverse "..
                                 "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
                                 "alt-up:half-page-up,alt-down:half-page-down "..
-                                "--preview-window 'top,+{1}-/2' "..
+                                "--preview-window 'down,+{1}-/2' "..
                                 "--preview 'bat -f -n --highlight-line {1} {filePath}'"
     end
 
