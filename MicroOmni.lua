@@ -14,7 +14,8 @@ local os = import("os")
 
 
 
-local OmniContentArgs = config.GetGlobalOption("OmniContentArgs")
+local OmniContentArgs = config.GetGlobalOption("OmniGlobalSearchArgs")
+local OmniLocalSearchArgs = config.GetGlobalOption("OmniLocalSearchArgs")
 local OmniSelectType = config.GetGlobalOption("OmniSelectType")
 local OmniHistoryLineDiff = config.GetGlobalOption("OmniHistoryLineDiff")
 local fzfCmd =  config.GetGlobalOption("fzfcmd")
@@ -126,7 +127,6 @@ function IsPathDir(path)
     return false
 end
 
-
 function FindContent(str, searchLoc)
     micro.Log("Find Content called")
     local bp = micro.CurPane()
@@ -145,17 +145,19 @@ function FindContent(str, searchLoc)
     end
 
     local currentOS = getOS()
+    local finalCmd;
     if currentOS == "Unix" then
         selectedText = selectedText:gsub("'", "'\\''")
         firstWord = firstWord:gsub("'", "'\\''")
         fzfArgs = OmniContentArgs:gsub("'", "'\\''")
+        finalCmd = "rg -i -uu -n '\\''"..firstWord.."'\\'' | "..fzfCmd.." "..fzfArgs.." -q '\\''"..selectedText.."'\\''"
     else
         selectedText = selectedText:gsub("'", '"')
         firstWord = firstWord:gsub("'", '""')
         fzfArgs = OmniContentArgs:gsub("'", '"')
+        finalCmd = "rg -i -uu -n \""..firstWord.."\" | "..fzfCmd.." "..fzfArgs.." -q \""..selectedText.."\""
     end
 
-    local finalCmd = "rg -i -uu -n \""..firstWord.."\" | "..fzfCmd.." "..fzfArgs.." -q \""..selectedText.."\""
 
     if currentOS == "Unix" then
         finalCmd = "sh -c \'"..finalCmd.."\'"
@@ -239,7 +241,9 @@ function LocBoundCheck(buf, loc)
 
     local lineLength = util.CharacterCountInString(buf:Line(returnLoc.Y))
 
-    if loc.X >= lineLength then
+    if lineLength == 0 then
+        returnLoc = buffer.Loc(0, returnLoc.Y)
+    elseif loc.X >= lineLength then
         returnLoc = buffer.Loc(lineLength - 1, returnLoc.Y)
     else
         returnLoc = buffer.Loc(loc.X, returnLoc.Y)
@@ -273,7 +277,7 @@ function OmniSelect(bp, args)
 
     if OmniSelectType == "relative" then
         targetLine = targetLine + tonumber(args[1])
-     else
+    else
         targetLine = tonumber(args[1]) - 1
     end
 
@@ -319,6 +323,8 @@ function GoToHistoryEntry(bp, entry)
             local currentPane = micro.Tabs().List[i].Panes[j]
             local currentBuf = currentPane.Buf
             if currentBuf ~= nil and currentBuf.AbsPath == entryFilePath then
+                currentPane.Cursor:ResetSelection()
+                currentPane.Buf:ClearCursors()
                 currentPane.Cursor:GotoLoc(LocBoundCheck(currentBuf, entry.CursorLoc))
 
                 -- NOTE: SetActive functions has index starting at 0 instead lol
@@ -329,9 +335,6 @@ function GoToHistoryEntry(bp, entry)
             end
         end
     end
-
-    bp.Cursor:GotoLoc(entry.CursorLoc)
-    bp:Relocate()
 end
 
 function LuaCopy(obj, seen)
@@ -507,7 +510,7 @@ function OnTypingHighlight(msg)
 end
 
 function OnSubmitHighlightFind(msg, cancelled)
-    if micro.CurPane() == nil or micro.CurPane().Buf == nil then return end
+    if micro.CurPane() == nil or micro.CurPane().Buf == nil or msg == nil or msg == "" then return end
 
     local bp = micro.CurPane()
     if cancelled then
@@ -518,8 +521,79 @@ function OnSubmitHighlightFind(msg, cancelled)
     bp.Buf.LastSearch = msg
     bp.Buf.LastSearchRegex = true
     bp.Buf.HighlightSearch = true
+    
+    local startFindLoc = buffer.Loc(0, 0)
+    local lastLineIndex = bp.Buf:LinesNum()
+    
+    if lastLineIndex > 0 then
+        lastLineIndex = lastLineIndex - 1
+    else
+        micro.InfoBar():Message("None found and highlighted")
+        return
+    end
+    
+    local lastLineLength = util.CharacterCountInString(bp.Buf:Line(lastLineIndex))
+    if lastLineLength ~= 0 then
+        lastLineLength = lastLineLength - 1
+    end
+    
+    local endFindLoc = buffer.Loc(lastLineLength, lastLineIndex)
+    
+    local foundCounter = 0
+    local currentLoc = buffer.Loc(startFindLoc.X, startFindLoc.Y)
+    local firstOccurrenceLoc = buffer.Loc(-1, -1)
+    
+    while true do
+        local foundLocs, found, err = bp.Buf:FindNext(  msg, 
+                                                        startFindLoc, 
+                                                        endFindLoc, 
+                                                        currentLoc, 
+                                                        true,
+                                                        true)
+        
+        if  found == false or 
+            err ~= nil or 
+            foundCounter == 1500 or 
+            (foundLocs[2].X == firstOccurrenceLoc.X and foundLocs[2].Y == firstOccurrenceLoc.Y) then
+            
+            break
+        end
+    
+        currentLoc = buffer.Loc(foundLocs[2].X, foundLocs[2].Y)
+        foundCounter = foundCounter + 1
+        
+        if foundCounter == 1 then
+            firstOccurrenceLoc = buffer.Loc(foundLocs[2].X, foundLocs[2].Y)
+        end
+    end
+    
+    micro.InfoBar():Message(foundCounter,   " found and highlighted. Do FindNext/FindPrevious to "..
+                                            "go to the occurrences")
 end
 
+function OmniLocalSearch(bp, args)
+    if OmniLocalSearchArgs == nil or OmniLocalSearchArgs == "" then
+        OmniLocalSearchArgs =   "--bind 'start:reload:bat -n --decorations always {filePath}' "..
+                                "-i "..
+                                "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+                                "alt-up:half-page-up,alt-down:half-page-down "..
+                                "--preview-window '+{1}-/2' "..
+                                "--preview 'bat -f -n --highlight-line {1} {filePath}'"
+    end
+
+    local localSearchArgs = OmniLocalSearchArgs:gsub("{filePath}", "\""..bp.buf.AbsPath.."\"")
+
+    local output, err = shell.RunInteractiveShell(fzfCmd.." "..localSearchArgs, false, true)
+
+    if err ~= nil or output == "" then
+        -- micro.InfoBar():Error("Error is: ", err:Error())
+    else
+        local lineNumber = output:match("^%s*(.-)%s.*")
+        -- micro.InfoBar():Message("Output is ", output, " and extracted lineNumber is ", lineNumber)
+        micro.CurPane():GotoCmd({lineNumber})
+        micro.CurPane():Center()
+    end
+end
 
 
 function TestECB(msg)
@@ -543,10 +617,18 @@ function OmniTest2(bp, args)
 end
 
 
+function OmniTest3(bp, args)
+    -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", TestECB, TestDoneCB)
+    -- local wd = os.Getwd()
+    -- local filePath = bp.buf.AbsPath
+
+end
+
 
 function init()
     -- config.MakeCommand("fzfinder", fzfinder, config.NoComplete)
-    config.MakeCommand("OmniSearch", OmniContent, config.NoComplete)
+    config.MakeCommand("OmniGlobalSearch", OmniContent, config.NoComplete)
+    config.MakeCommand("OmniLocalSearch", OmniLocalSearch, config.NoComplete)
     config.MakeCommand("OmniCenter", OmniCenter, config.NoComplete)
     config.MakeCommand("OmniJumpSelect", OmniSelect, config.NoComplete)
 

@@ -3,8 +3,9 @@
 Just a swiss army knife plugin that adds the functionalities I have from VSCodium.
 
 List of features not in any particular order:
-- ⚙️ Fuzzy Search For Files Recursively
+- 🔍️ Fuzzy Search For Files Recursively
     - This extends from fzfinder, but can work independently
+- 🧭 Fuzzy Search For Current File
 - 🔲 Centering Cursor To Viewport
 - 🦘 Jump Selection
 - 📔 Global Cursor History
@@ -42,19 +43,19 @@ All of these are available for Unix and Windows
 Recommended binding:
 ```json
 {
-    "Alt-F": "command:OmniSearch",
+    "Alt-F": "command:OmniGlobalSearch",
     //Windows
-    "Alt-Shift-F": "command:OmniSearch"
+    "Alt-Shift-F": "command:OmniGlobalSearch"
 }
 ```
 
-To find a with keyword(s), launch command `OmniSearch` which is bindable to a key.
+To find a with keyword(s), launch command `OmniGlobalSearch` which is bindable to a key.
 1. First it will ask you which directory to search from, if a relative path is give, 
 this will be relative to current working directory (not to be confused with current file directory).
 Leaving empty will default to current working directory.
     - `{fileDir}` can be used to substitute the directory path of the current file. 
-2. If any text was selected prior to launching the `OmniSearch` command, that text will be used
-for **fuzzy** searching. If not, a prompt will ask you what to search.
+2. If any text was selected prior to launching the `OmniGlobalSearch` command, that text will be used
+for **fuzzy** searching. If not, a prompt will ask you what to **fuzzy** search.
 3. If successful, a fzf window will be launched. Here are the keybindings by default:
     - up/down: Navigate results
     - alt-up / alt-down: Navigate half page of results
@@ -69,15 +70,42 @@ for **fuzzy** searching. If not, a prompt will ask you what to search.
     - `newtab`: Opens in new tab
     - `vsplit`: Opens in new pane as vertical split
     - `hsplit`: Opens in new pane as horizontal split
-- `OmniContentArgs`: Argument to be passed to fzf. It defaults to the following:
+- `OmniGlobalSearchArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
-OmniContentArgs =   "--bind 'alt-f:reload:rg -i -uu -n {q}' "..
-                    "--delimiter : -i "..
-                    "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-                    "alt-up:half-page-up,alt-down:half-page-down "..
-                    "--preview-window '+{2}-/2' "..
-                    "--preview 'bat -f -n --highlight-line {2} {1}'"
+OmniGlobalSearchArgs =  "--bind 'alt-f:reload:rg -i -uu -n {q}' "..
+                        "--delimiter : -i "..
+                        "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+                        "alt-up:half-page-up,alt-down:half-page-down "..
+                        "--preview-window '+{2}-/2' "..
+                        "--preview 'bat -f -n --highlight-line {2} {1}'"
 ```
+
+## 🧭 Fuzzy Search For Current File
+```json
+{
+    "Alt-f": "command:OmniLocalSearch"
+}
+```
+
+Similar to "Fuzzy Search For Files Recursively", this do a fuzzy search for the current file.
+This is achieved by `bat` the file on disk to `fzf`, therefore you should save before searching.
+
+The default control is the same as "Fuzzy Search For Files Recursively".
+
+To search, simply launch the `OmniLocalSearch` command.
+
+### ⚙️ Fuzzy Search Settings
+- `OmniLocalSearchArgs`: Argument to be passed to fzf with `{filePath}` substitute with 
+the current file path. It defaults to the following:
+```lua
+OmniLocalSearchArgs =   "--bind 'start:reload:bat -n --decorations always {filePath}' "..
+                        "-i "..
+                        "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+                        "alt-up:half-page-up,alt-down:half-page-down "..
+                        "--preview-window '+{1}-/2' "..
+                        "--preview 'bat -f -n --highlight-line {1} {filePath}'"
+```
+
 
 ## 🔲 Centering Cursor To Viewport
 
@@ -144,6 +172,12 @@ You can copy the current file absolute or relative path with `OmniCopyRelativePa
 
 
 ## 🔦 Highlight Only (Before finding next)
+Recommended binding:
+```json
+{
+    "Alt-h": "command:OmniHighlightOnly"
+}
+```
 
 - `OmniHighlightOnly`: TODO
 
