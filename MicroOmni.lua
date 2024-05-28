@@ -62,7 +62,7 @@ function OmniContent(bp)
                             "--delimiter : -i "..
                             "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
                             "alt-up:half-page-up,alt-down:half-page-down "..
-                            "--preview-window '+{2}-/2' "..
+                            "--preview-window 'top,+{2}-/2' "..
                             "--preview 'bat -f -n --highlight-line {2} {1}'"
     end
 
@@ -577,11 +577,15 @@ function OmniLocalSearch(bp, args)
                                 "-i "..
                                 "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
                                 "alt-up:half-page-up,alt-down:half-page-down "..
-                                "--preview-window '+{1}-/2' "..
+                                "--preview-window 'top,+{1}-/2' "..
                                 "--preview 'bat -f -n --highlight-line {1} {filePath}'"
     end
 
     local localSearchArgs = OmniLocalSearchArgs:gsub("{filePath}", "\""..bp.buf.AbsPath.."\"")
+
+    if bp.Cursor:HasSelection() then
+            localSearchArgs = localSearchArgs.." -q '"..util.String(bp.Cursor:GetSelection()).."'"
+    end
 
     local output, err = shell.RunInteractiveShell(fzfCmd.." "..localSearchArgs, false, true)
 
