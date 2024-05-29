@@ -137,7 +137,7 @@ function FindContent(str, searchLoc)
     -- micro.Log("selectedText before: ", selectedText)
     -- micro.Log("OmniContentArgs before: ", OmniContentArgs)
 
-    local firstWord, otherWords = selectedText:match("^(.-)%s-(.*)$")
+    local firstWord, otherWords = selectedText:match("^(.[^%s]*)%s-(.*)$")
 
     if firstWord == nil then
         micro.InfoBar():Error("Failed to extract first word... str: ", str)
