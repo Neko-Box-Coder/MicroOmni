@@ -139,7 +139,7 @@ function FindContent(str, searchLoc)
 
     local firstWord, otherWords = selectedText:match("^(.[^%s]*)%s-(.*)$")
 
-    if firstWord == nil then
+    if firstWord == nil or firstWord == "" then
         micro.InfoBar():Error("Failed to extract first word... str: ", str)
         return
     end
@@ -192,6 +192,12 @@ function FindContent(str, searchLoc)
         -- micro.InfoBar():Error("Error is: ", err:Error())
     else
         local filePath, lineNumber = output:match("^(.-):%s*(%d+):")
+        
+        if searchLoc ~= nil and searchLoc ~= "" then
+            -- micro.InfoBar():Message("Open path is ", filepath.Abs(OmniContentFindPath.."/"..filePath))
+            filePath = OmniContentFindPath.."/"..filePath
+        end
+        
         fzfParseOutput(filePath, bp, lineNumber)
     end
 end
@@ -212,6 +218,8 @@ function fzfParseOutput(output, bp, lineNum)
            bp:NewTabCmd({file})
         else
             local buf, err = buffer.NewBufferFromFile(file)
+            if err ~= nil then return end
+            
             if fzfOpen == "vsplit" then
                 bp:VSplitIndex(buf, true)
             elseif fzfOpen == "hsplit" then
@@ -335,6 +343,13 @@ function GoToHistoryEntry(bp, entry)
             end
         end
     end
+    
+    bp:NewTabCmd({entryFilePath})
+    if  micro.CurPane() == nil or micro.CurPane().Cursor == nil or micro.CurPane().Buf == nil then
+        return
+    end
+    
+    micro.CurPane().Cursor:GotoLoc(LocBoundCheck(micro.CurPane().Buf, entry.CursorLoc))
 end
 
 function LuaCopy(obj, seen)
