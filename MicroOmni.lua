@@ -325,6 +325,7 @@ function GoToHistoryEntry(bp, entry)
     local entryFilePath = OmniCursorFilePathMap[entry.FileId]
 
     -- micro.Log("We have ", #micro.Tabs().List, " tabs")
+    
     for i = 1, #micro.Tabs().List do
         -- micro.Log("Tab ", i, " has ", #micro.Tabs().List[i].Panes, " panes")
         for j = 1, #micro.Tabs().List[i].Panes do
@@ -344,12 +345,20 @@ function GoToHistoryEntry(bp, entry)
         end
     end
     
-    bp:NewTabCmd({entryFilePath})
+    local entryRelativePath, err = filepath.Rel(os.Getwd(), entryFilePath)
+    
+    if err ~= nil or entryRelativePath == nil or entryRelativePath == nil then
+        bp:NewTabCmd({entryFilePath})
+    else
+        bp:NewTabCmd({entryRelativePath})
+    end
+    
     if  micro.CurPane() == nil or micro.CurPane().Cursor == nil or micro.CurPane().Buf == nil then
         return
     end
     
     micro.CurPane().Cursor:GotoLoc(LocBoundCheck(micro.CurPane().Buf, entry.CursorLoc))
+    micro.CurPane():Relocate()
 end
 
 function LuaCopy(obj, seen)

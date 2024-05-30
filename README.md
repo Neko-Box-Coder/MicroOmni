@@ -3,7 +3,7 @@
 Just a swiss army knife plugin that adds the functionalities I have from VSCodium.
 
 List of features not in any particular order:
-- 🔍️ Fuzzy Search For Files Recursively
+- 🔍️ Fuzzy Search For Files Content Recursively
     - This extends from fzfinder, but can work independently
 - 🧭 Fuzzy Search For Current File
 - 🔲 Centering Cursor To Viewport
@@ -38,7 +38,9 @@ All of these are available for Unix and Windows
 >
 > [https://github.com/sharkdp/bat/releases](https://github.com/sharkdp/bat/releases)
 
-## 🔍️ Fuzzy Search For Files Recursively
+## 🔍️ Fuzzy Search For Files Content Recursively
+
+![Search Gif](./Resources/GlobalSearch.gif)
 
 Recommended binding:
 ```json
@@ -81,6 +83,8 @@ OmniGlobalSearchArgs =  "--bind 'alt-f:reload:rg -i -uu -n {q}' "..
 ```
 
 ## 🧭 Fuzzy Search For Current File
+![Local Gif](./Resources/LocalSearch.gif)
+
 ```json
 {
     "Alt-f": "command:OmniLocalSearch"
@@ -108,7 +112,7 @@ OmniLocalSearchArgs =   "--bind 'start:reload:bat -n --decorations always {fileP
 
 
 ## 🔲 Centering Cursor To Viewport
-
+![Center Gif](./Resources/Center.gif)
 Recommended binding:
 ```json
 {
@@ -119,6 +123,7 @@ Recommended binding:
 It centers your cursor to the middle of your viewport.
 
 ## 🦘 Jump Selection
+![Jump Select Gif](./Resources/JumpSelect.gif)
 
 Recommended binding:
 ```json
@@ -140,6 +145,7 @@ This can be configured to use absolute line number. See settings.
 
 
 ## 📔 Global Cursor History
+![Global Cursor History Gif](./Resources/GlobalHistory.gif)
 
 Recommended binding:
 ```json
