@@ -58,7 +58,7 @@ end
 
 function OmniContent(bp)
     if OmniContentArgs == nil or OmniContentArgs == "" then
-        OmniContentArgs =   "--bind 'alt-f:reload:rg -i -uu -n {q}' "..
+        OmniContentArgs =   "--bind 'alt-f:reload:rg -i -F -uu -n {q}' "..
                             "--delimiter : -i --reverse "..
                             "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
                             "alt-up:half-page-up,alt-down:half-page-down "..
@@ -150,12 +150,12 @@ function FindContent(str, searchLoc)
         selectedText = selectedText:gsub("'", "'\\''")
         firstWord = firstWord:gsub("'", "'\\''")
         fzfArgs = OmniContentArgs:gsub("'", "'\\''")
-        finalCmd = "rg -i -uu -n '\\''"..firstWord.."'\\'' | "..fzfCmd.." "..fzfArgs.." -q '\\''"..selectedText.."'\\''"
+        finalCmd = "rg -F -i -uu -n '\\''"..firstWord.."'\\'' | "..fzfCmd.." "..fzfArgs.." -q '\\''"..selectedText.."'\\''"
     else
         selectedText = selectedText:gsub("'", '"')
         firstWord = firstWord:gsub("'", '""')
         fzfArgs = OmniContentArgs:gsub("'", '"')
-        finalCmd = "rg -i -uu -n \""..firstWord.."\" | "..fzfCmd.." "..fzfArgs.." -q \""..selectedText.."\""
+        finalCmd = "rg -F -i -uu -n \""..firstWord.."\" | "..fzfCmd.." "..fzfArgs.." -q \""..selectedText.."\""
     end
 
 
@@ -277,8 +277,6 @@ function OmniSelect(bp, args)
     local currentLoc = cursor.Loc
     local targetLine = cursor.Loc.Y
 
-    cursor.OrigSelection[1] = buffer.Loc(cursor.Loc.X, cursor.Loc.Y)
-
     if OmniSelectType == nil or OmniSelectType == "" then
         OmniSelectType = "relative"
     end
@@ -288,11 +286,19 @@ function OmniSelect(bp, args)
     else
         targetLine = tonumber(args[1]) - 1
     end
+    
+    local selectX = 0
+    cursor.OrigSelection[1] = buffer.Loc(cursor.Loc.X, cursor.Loc.Y)
+
+    if targetLine > cursor.Loc.Y then
+        local lineLength = util.CharacterCountInString(buf:Line(targetLine))
+        selectX = lineLength
+    end
 
     -- micro.InfoBar():Message("targetLine: ", targetLine)
     -- micro.Log("targetLine: ", targetLine)
-    cursor:GotoLoc(buffer.Loc(currentLoc.X, targetLine))
-    cursor:SelectTo(buffer.Loc(currentLoc.X, targetLine))
+    cursor:GotoLoc(buffer.Loc(selectX, targetLine))
+    cursor:SelectTo(buffer.Loc(selectX, targetLine))
     bp:Relocate()
 end
 
