@@ -24,7 +24,9 @@ This is still a WIP plugin so don't have any releases yet. To use this, you will
 
 
 ## 📐 Requirements
-- micro (from [my branch](https://github.com/Neko-Box-Coder/micro-dev) for now due to a [bug](https://github.com/zyedidia/micro/pull/3318))
+- micro
+    - Build from upstream **master**
+    - Alternatively, you can use pre-built binaries from [my branch](https://github.com/Neko-Box-Coder/micro-dev))
 - fzf
 - ripgrep
 - bat

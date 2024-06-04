@@ -70,10 +70,10 @@ function OmniContent(bp)
     if bp.Cursor:HasSelection() then
         OmniSearchText = bp.Cursor:GetSelection()
         OmniSearchText = util.String(OmniSearchText)
-        micro.InfoBar():Prompt("Search Directory ({fileDir} for current file directory) > ", "", "", nil, OnSearchDirSetDone)
-    else
-        micro.InfoBar():Prompt("Search Directory ({fileDir} for current file directory) > ", "", "", nil, OnSearchDirSetDone)
     end
+    
+    -- TODO: Show files and directory if possible
+    micro.InfoBar():Prompt("Search Directory ({fileDir} for current file directory) > ", "", "", nil, OnSearchDirSetDone)
 end
 
 function OnSearchDirSetDone(resp, cancelled)
@@ -83,12 +83,7 @@ function OnSearchDirSetDone(resp, cancelled)
     if bp == nil then return end
     
     OmniContentFindPath = resp:gsub("{fileDir}", filepath.Dir(bp.buf.AbsPath))
-
-    if OmniSearchText == "" then
-        micro.InfoBar():Prompt("Content to find > ", "", "", nil, OnFindPromptDone)
-    else
-        FindContent(OmniSearchText, OmniContentFindPath)
-    end
+    micro.InfoBar():Prompt("Content to find > ", OmniSearchText, "", nil, OnFindPromptDone)
 end
 
 function OnFindPromptDone(resp, cancelled)
@@ -614,7 +609,7 @@ function OmniLocalSearch(bp, args)
     local localSearchArgs = OmniLocalSearchArgs:gsub("{filePath}", "\""..bp.buf.AbsPath.."\"")
 
     if bp.Cursor:HasSelection() then
-            localSearchArgs = localSearchArgs.." -q '"..util.String(bp.Cursor:GetSelection()).."'"
+        localSearchArgs = localSearchArgs.." -q '"..util.String(bp.Cursor:GetSelection()).."'"
     end
 
     local output, err = shell.RunInteractiveShell(fzfCmd.." "..localSearchArgs, false, true)
@@ -658,6 +653,11 @@ function OmniTest3(bp, args)
 
 end
 
+function CheckCommand(command)
+    local _, error = shell.RunCommand(command)
+    if error ~= nil then return false end
+    return true
+end
 
 function init()
     -- config.MakeCommand("fzfinder", fzfinder, config.NoComplete)
@@ -689,5 +689,31 @@ function init()
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)
     config.MakeCommand("OmniTest3", OmniTest3, config.NoComplete)
 
-  
+    local missingCommands = {}
+    if not CheckCommand("fzf --version") then
+        missingCommands[#missingCommands + 1] = "fzf"
+    end
+    
+    if not CheckCommand("rg -V") then
+        missingCommands[#missingCommands + 1] = "ripgrep"
+    end
+    
+    if not CheckCommand("bat -V") then
+        missingCommands[#missingCommands + 1] = "bat"
+    end
+
+    if #missingCommands ~= 0 then
+        local missingCommandsString = ""
+        
+        for i = 1, #missingCommands do
+            if i ~= #missingCommands then
+                missingCommandsString = missingCommandsString..missingCommands[i]..", "
+            else
+                missingCommandsString = missingCommandsString..missingCommands[i].." "
+            end
+        end
+        
+        micro.InfoBar():Error(  missingCommandsString.."are missing. Search may not work properly")
+    end
+
 end
