@@ -3,14 +3,15 @@
 Just a swiss army knife plugin that adds the functionalities I have from VSCodium.
 
 List of features not in any particular order:
-- 🔍️ Fuzzy Search For Files Content Recursively
+- 🔍️ Fuzzy Search For Text Globally
     - This extends from fzfinder, but can work independently
-- 🧭 Fuzzy Search For Current File
+- 🧭 Fuzzy Search For Text Locally
 - 🔲 Centering Cursor To Viewport
 - 🦘 Jump Selection
 - 📔 Global Cursor History
 - 📁 Copy Current File Path
 - 🔦 Highlight Only (Before finding next)
+- 🚀 Word Jumping (EasyMotion)
 - (WIP) Bracket jumping without on top of it
 - (WIP) Contect selection within brackets
 - (WIP) Diff view
@@ -40,7 +41,7 @@ All of these are available for Unix and Windows
 >
 > [https://github.com/sharkdp/bat/releases](https://github.com/sharkdp/bat/releases)
 
-## 🔍️ Fuzzy Search For Files Content Recursively
+## 🔍️ Fuzzy Search For Text Globally
 
 ![Search Gif](./Resources/GlobalSearch.gif)
 
@@ -84,7 +85,8 @@ OmniGlobalSearchArgs =  "--bind 'alt-f:reload:rg -i -uu -n {q}' "..
                         "--preview 'bat -f -n --highlight-line {2} {1}'"
 ```
 
-## 🧭 Fuzzy Search For Current File
+## 🧭 Fuzzy Search For Text Locally
+
 ![Local Gif](./Resources/LocalSearch.gif)
 
 ```json
@@ -189,3 +191,13 @@ Recommended binding:
 
 - `OmniHighlightOnly`: TODO
 
+## 🚀 Word Jumping (EasyMotion)
+
+TODO
+
+Recommended binding:
+```json
+{
+    "Alt-j": "command:OmniJump"
+}
+```

@@ -9,8 +9,9 @@ local action = import("micro/action")
 local util = import("micro/util")
 local screen = import("micro/screen")
 local runtime = import("runtime")
+local strings = import("strings")
 local os = import("os")
-
+local utf8 = import("utf8")
 
 
 
@@ -18,6 +19,9 @@ local OmniContentArgs = config.GetGlobalOption("OmniGlobalSearchArgs")
 local OmniLocalSearchArgs = config.GetGlobalOption("OmniLocalSearchArgs")
 local OmniSelectType = config.GetGlobalOption("OmniSelectType")
 local OmniHistoryLineDiff = config.GetGlobalOption("OmniHistoryLineDiff")
+
+-- TODO(NOW): Allow setting highlight to use regex or not
+
 local fzfCmd =  config.GetGlobalOption("fzfcmd")
 local fzfOpen = config.GetGlobalOption("fzfopen")
 
@@ -31,11 +35,12 @@ local OmniCursorIndices =
 }
 local OmniCursorFilePathMap = {}
 local OmniCursorReverseFilePathMap = {}
-
-
 local OmniContentFindPath = ""
 local OmniSearchText = ""
 
+local OmniOriginalWordsRecords = {} 
+local OmniJumpWordsRecords = {}
+local OmniOriginalSearchIgnoreCase = false
 
 
 function getOS()
@@ -54,26 +59,6 @@ function setupFzf(bp)
     if fzfOpen == nil then
         fzfOpen = "thispane"
     end
-end
-
-function OmniContent(bp)
-    if OmniContentArgs == nil or OmniContentArgs == "" then
-        OmniContentArgs =   "--bind 'alt-f:reload:rg -i -F -uu -n {q}' "..
-                            "--delimiter : -i --reverse "..
-                            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-                            "alt-up:half-page-up,alt-down:half-page-down "..
-                            "--preview-window 'down,+{2}-/2' "..
-                            "--preview 'bat -f -n --highlight-line {2} {1}'"
-    end
-
-    OmniSearchText = ""
-    if bp.Cursor:HasSelection() then
-        OmniSearchText = bp.Cursor:GetSelection()
-        OmniSearchText = util.String(OmniSearchText)
-    end
-    
-    -- TODO: Show files and directory if possible
-    micro.InfoBar():Prompt("Search Directory ({fileDir} for current file directory) > ", "", "", nil, OnSearchDirSetDone)
 end
 
 function OnSearchDirSetDone(resp, cancelled)
@@ -255,69 +240,6 @@ function LocBoundCheck(buf, loc)
     return returnLoc
 end
 
-function OmniCenter(bp)
-    local view = bp:GetView()
-    local oriX = bp.Cursor.Loc.X
-    bp.Cursor:ResetSelection()
-    bp.Buf:ClearCursors()
-    local targetLineY = view.StartLine.Line + view.Height / 2
-    bp.Cursor:GotoLoc(LocBoundCheck(bp.Buf, buffer.Loc(bp.Cursor.Loc.X, targetLineY)))
-end
-
-function OmniSelect(bp, args)
-    if #args < 1 then return end
-
-    local buf = bp.Buf
-    local cursor = buf:GetActiveCursor()
-    local currentLoc = cursor.Loc
-    local targetLine = cursor.Loc.Y
-
-    if OmniSelectType == nil or OmniSelectType == "" then
-        OmniSelectType = "relative"
-    end
-
-    if OmniSelectType == "relative" then
-        targetLine = targetLine + tonumber(args[1])
-    else
-        targetLine = tonumber(args[1]) - 1
-    end
-    
-    local selectX = 0
-    cursor.OrigSelection[1] = buffer.Loc(cursor.Loc.X, cursor.Loc.Y)
-
-    if targetLine > cursor.Loc.Y then
-        local lineLength = util.CharacterCountInString(buf:Line(targetLine))
-        selectX = lineLength
-    end
-
-    -- micro.InfoBar():Message("targetLine: ", targetLine)
-    -- micro.Log("targetLine: ", targetLine)
-    cursor:GotoLoc(buffer.Loc(selectX, targetLine))
-    cursor:SelectTo(buffer.Loc(selectX, targetLine))
-    bp:Relocate()
-end
-
-
-function GoToPreviousHistory(bp)
-    if #OmniCursorHistory == 0 or OmniCursorIndices.CurrentIndex <= OmniCursorIndices.StartIndex then
-        return
-    end
-
-    OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex - 1;
-    micro.InfoBar():Message("Going to previous history at index ", OmniCursorIndices.CurrentIndex)
-    GoToHistoryEntry(bp, OmniCursorHistory[OmniCursorIndices.CurrentIndex])
-end
-
-function GoToNextHistory(bp)
-    if #OmniCursorHistory == 0 or OmniCursorIndices.CurrentIndex >= OmniCursorIndices.EndIndex then
-        return
-    end
-
-    OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex + 1;
-    micro.InfoBar():Message("Going to next history at index ", OmniCursorIndices.CurrentIndex)
-    GoToHistoryEntry(bp, OmniCursorHistory[OmniCursorIndices.CurrentIndex])
-end
-
 function GoToHistoryEntry(bp, entry)
     micro.Log("GoToHistoryEntry called")
     micro.Log(  "Goto Entry: ", OmniCursorFilePathMap[entry.FileId], 
@@ -493,38 +415,6 @@ function WriteToClipboardWorkaround(content)
     curTab:SetActive(curPaneIndex)
 end
 
-function OmniCopyRelativePath(bp)
-    if bp.Buf == nil then return end
-
-    -- clipboard.Write(bp.Buf.Path, clipboard.ClipboardReg)
-    WriteToClipboardWorkaround(bp.Buf.Path)
-    micro.InfoBar():Message(bp.Buf.Path, " copied into clipboard")
-end
-
-function OmniCopyAbsolutePath(bp)
-    if bp.Buf == nil then return end
-    
-    -- clipboard.Write(bp.Buf.AbsPath, clipboard.ClipboardReg)
-    WriteToClipboardWorkaround(bp.Buf.AbsPath)
-    micro.InfoBar():Message(bp.Buf.AbsPath, " copied into clipboard")
-end
-
-
-function OmniHighlightOnly(bp)
-    local selectionText = ""
-    if bp.Cursor:HasSelection() then
-        selectionText = bp.Cursor:GetSelection()
-        selectionText = util.String(selectionText)
-    end
-    
-    micro.InfoBar():Prompt( "Highlight Then Find (regex) > ", 
-                            selectionText, "", OnTypingHighlight, OnSubmitHighlightFind)
-
-    -- bp.Buf.LastSearch = args[1]
-    -- bp.Buf.LastSearchRegex = true
-    -- bp.Buf.HighlightSearch = true
-end
-
 function OnTypingHighlight(msg)
     if micro.CurPane() == nil or micro.CurPane().Buf == nil then return end
 
@@ -596,6 +486,248 @@ function OnSubmitHighlightFind(msg, cancelled)
                                             "go to the occurrences")
 end
 
+function AssignJumpWordsToView(msg)
+    local bp = micro.CurPane()
+    local view = bp:GetView()
+    local numberOfLines = bp.Buf:LinesNum()
+    local viewStart = (view.StartLine.Line < 0 and {0} or {view.StartLine.Line})[1]
+    local viewEnd = viewStart + view.Height - 2
+    viewEnd = (viewEnd >= numberOfLines and {numberOfLines - 1} or {viewEnd})[1]
+    local viewMid = (viewEnd + viewStart) / 2
+
+    local leftMajorChars = "ASDF"
+    local leftMinorChars = "GQWERTZXCVB"
+    
+    local rightMajorChars = "JKL"
+    local rightMinorChars = "HYUIOPNM"
+
+    local rightOriginalWords, rightJumpWords = AssignJumpWords( rightMajorChars..rightMinorChars, 
+                                                                leftMajorChars..leftMinorChars, 
+                                                                viewMid, 
+                                                                viewEnd,
+                                                                msg)
+    
+    local leftOriginalWords = {}
+    local leftJumpWords = {}
+    
+    if viewMid ~= 0 then
+        leftOriginalWords, leftJumpWords = AssignJumpWords(   leftMajorChars..leftMinorChars, 
+                                                                    rightMajorChars..rightMinorChars, 
+                                                                    viewStart, 
+                                                                    viewMid - 1,
+                                                                    msg)
+    end
+    
+    OmniOriginalWordsRecords = {}
+    OmniJumpWordsRecords = {}
+    
+    for k, v in pairs(leftOriginalWords) do
+        OmniOriginalWordsRecords[k] = v
+    end
+    
+    for k, v in pairs(rightOriginalWords) do
+        OmniOriginalWordsRecords[k] = v
+    end
+    
+    if viewMid ~= 0 then
+        for k, v in pairs(leftJumpWords) do
+            OmniJumpWordsRecords[k] = v
+        end
+        
+        for k, v in pairs(rightJumpWords) do
+            OmniJumpWordsRecords[k] = v
+        end
+    end
+
+    -- if numberOfLines >= 1 then
+    --     bp.Buf:Insert(buffer.Loc(0, 0), "A")
+    --     bp.Buf:Remove(buffer.Loc(0, 0), buffer.Loc(1, 0))
+    -- end
+    -- bp.Buf:UpdateRules()
+end
+
+function AssignJumpWords(majorChars, minorChars, rowIndexStart, rowIndexEnd, CurrentJumpChar)
+    micro.Log("rowIndexStart:", rowIndexStart)
+    micro.Log("rowIndexEnd:", rowIndexEnd)
+    micro.Log("string.len(majorChars):", string.len(majorChars))
+    micro.Log("string.len(minorChars):", string.len(minorChars))
+    local bp = micro.CurPane()
+    local majorCharIndex = 1
+    local minorCharIndex = 1
+    
+    local jumpWordToRc = {}
+    local rcToOriWord = {}
+    local jumpWordsSeparators = " \t¬~_++<>:{}|&*($%^!\"£)#-=,.;[]'\\/"
+
+    for i = rowIndexStart, rowIndexEnd do
+        rcToOriWord[i] = {}
+        
+        local currentLineBytes = bp.Buf:LineBytes(i)
+        local j = 1
+        local wordCharCounter = 0
+        local usedAllChars = false
+        local charIndex = 0
+        
+        while j <= #currentLineBytes do
+            local endRuneCaptureIndex
+            if j + 4 > #currentLineBytes then
+                endRuneCaptureIndex = #currentLineBytes
+            else
+                endRuneCaptureIndex = j + 4
+            end
+            
+            local runeBuffer = {}
+            for k = j, endRuneCaptureIndex do
+                table.insert(runeBuffer, currentLineBytes[k])
+            end
+            
+            local rune, size = utf8.DecodeRune(runeBuffer)
+            runeBuffer = {}
+            for k = j, j + size - 1 do
+                table.insert(runeBuffer, currentLineBytes[k])
+            end
+            
+            local runeStr = util.String(runeBuffer)
+            if jumpWordsSeparators:find(runeStr, 1, true) == nil then
+                wordCharCounter = wordCharCounter + 1
+                
+                if wordCharCounter <= 2 and size == 1 then
+                    if wordCharCounter == 2 then
+                        local currentMajorChar = majorChars:sub(majorCharIndex, majorCharIndex)
+                        local currentMinorChar = minorChars:sub(minorCharIndex, minorCharIndex)
+                    
+                        rcToOriWord[i][j - 1] = {currentLineBytes[j - 1], currentLineBytes[j]}
+                        -- jumpWordToRc[currentMajorChar..currentMinorChar] = {i, j - 1}
+                        jumpWordToRc[currentMajorChar..currentMinorChar] = {i, charIndex - 1}
+
+                        if CurrentJumpChar ~= nil and CurrentJumpChar ~= "" then
+                            if CurrentJumpChar == currentMajorChar then
+                                currentLineBytes[j - 1] = string.byte(string.lower(currentMajorChar))
+                                currentLineBytes[j] = string.byte(currentMinorChar)
+                            end
+                        else
+                            currentLineBytes[j - 1] = string.byte(currentMajorChar)
+                            currentLineBytes[j] = string.byte(currentMinorChar)
+                        end
+                        
+                        if minorCharIndex >= string.len(minorChars) then
+                            if majorCharIndex >= string.len(majorChars) then
+                                usedAllChars = true
+                                break
+                            else
+                                majorCharIndex = majorCharIndex + 1
+                                minorCharIndex = 1
+                            end
+                        else
+                            minorCharIndex = minorCharIndex + 1
+                        end
+                    end
+                end
+            else
+                wordCharCounter = 0
+            end
+            
+            if size <= 0 then
+                break
+            end
+            
+            j = j + size
+            charIndex = charIndex + 1
+        end
+        
+        if usedAllChars then
+            break
+        end
+    end
+    
+    return rcToOriWord, jumpWordToRc
+end
+
+function RestoreOriginalWords(rcToOriWord, exclusionRow)
+    local bp = micro.CurPane()
+    for row, rowValues in pairs(rcToOriWord) do
+        if exclusionRow == nil or row ~= exclusionRow then
+            local currentLineBytes = bp.Buf:LineBytes(row)
+            for column, words in pairs(rowValues) do
+                currentLineBytes[column] = words[1]
+                currentLineBytes[column + 1] = words[2]
+            end
+        end
+    end
+end
+
+function OnTypingJump(msg)
+    local bp = micro.CurPane()
+
+    if string.len(msg) > 2 then
+        bp.Buf.HighlightSearch = false
+        return
+    end
+    
+    if string.len(msg) == 2 then
+        micro.InfoBar():DonePrompt(false)
+        return
+    end
+    
+    msg = string.upper(msg)
+    RestoreOriginalWords(OmniOriginalWordsRecords, nil)
+    AssignJumpWordsToView(msg)
+    
+    if string.len(msg) == 1 then
+        bp.Buf.LastSearch = "\\b[a-z][A-Z]"
+    else
+        bp.Buf.LastSearch = "\\b[A-Z]{2}"
+    end
+    
+    bp.Buf.HighlightSearch = true
+    bp.Buf.LastSearchRegex = true
+
+end
+
+function OnWordJump(msg, cancelled)
+    RestoreOriginalWords(OmniOriginalWordsRecords, nil)
+    local bp = micro.CurPane()
+    bp.Buf.Settings["ignorecase"] = OmniOriginalSearchIgnoreCase
+    bp.Buf.LastSearch = ""
+    bp.Buf.HighlightSearch = false
+    if string.len(msg) ~= 2  or cancelled then
+        return
+    end
+    
+    msg = string.upper(msg)
+    if OmniJumpWordsRecords[msg] == nil then
+        return
+    end
+    
+    local jumpRowColumn = OmniJumpWordsRecords[msg]
+    bp.Cursor:GotoLoc(LocBoundCheck(bp.Buf, buffer.Loc(jumpRowColumn[2], jumpRowColumn[1])))
+end
+
+function CheckCommand(command)
+    local _, error = shell.RunCommand(command)
+    if error ~= nil then return false end
+    return true
+end
+
+function OmniContent(bp)
+    if OmniContentArgs == nil or OmniContentArgs == "" then
+        OmniContentArgs =   "--bind 'alt-f:reload:rg -i -F -uu -n {q}' "..
+                            "--delimiter : -i --reverse "..
+                            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+                            "alt-up:half-page-up,alt-down:half-page-down "..
+                            "--preview-window 'down,+{2}-/2' "..
+                            "--preview 'bat -f -n --highlight-line {2} {1}'"
+    end
+
+    OmniSearchText = ""
+    if bp.Cursor:HasSelection() then
+        OmniSearchText = bp.Cursor:GetSelection()
+        OmniSearchText = util.String(OmniSearchText)
+    end
+    
+    micro.InfoBar():Prompt("Search Directory ({fileDir} for current file directory) > ", "", "", nil, OnSearchDirSetDone)
+end
+
 function OmniLocalSearch(bp, args)
     if OmniLocalSearchArgs == nil or OmniLocalSearchArgs == "" then
         OmniLocalSearchArgs =   "--bind 'start:reload:bat -n --decorations always {filePath}' "..
@@ -624,13 +756,152 @@ function OmniLocalSearch(bp, args)
     end
 end
 
-
-function TestECB(msg)
-    micro.Log("TestECV called with message: ", msg)
+function OmniCenter(bp)
+    local view = bp:GetView()
+    local oriX = bp.Cursor.Loc.X
+    bp.Cursor:ResetSelection()
+    bp.Buf:ClearCursors()
+    local targetLineY = view.StartLine.Line + view.Height / 2
+    bp.Cursor:GotoLoc(LocBoundCheck(bp.Buf, buffer.Loc(bp.Cursor.Loc.X, targetLineY)))
 end
 
-function TestDoneCB(msg, cancelled)
-    micro.Log("TestDoneCB called with message ", msg, " and cancelled ", cancelled)
+function OmniSelect(bp, args)
+    if #args < 1 then return end
+
+    local buf = bp.Buf
+    local cursor = buf:GetActiveCursor()
+    local currentLoc = cursor.Loc
+    local targetLine = cursor.Loc.Y
+
+    if OmniSelectType == nil or OmniSelectType == "" then
+        OmniSelectType = "relative"
+    end
+
+    if OmniSelectType == "relative" then
+        targetLine = targetLine + tonumber(args[1])
+    else
+        targetLine = tonumber(args[1]) - 1
+    end
+    
+    local selectX = 0
+    cursor.OrigSelection[1] = buffer.Loc(cursor.Loc.X, cursor.Loc.Y)
+
+    if targetLine > cursor.Loc.Y then
+        local lineLength = util.CharacterCountInString(buf:Line(targetLine))
+        selectX = lineLength
+    end
+
+    -- micro.InfoBar():Message("targetLine: ", targetLine)
+    -- micro.Log("targetLine: ", targetLine)
+    cursor:GotoLoc(buffer.Loc(selectX, targetLine))
+    cursor:SelectTo(buffer.Loc(selectX, targetLine))
+    bp:Relocate()
+end
+
+function GoToPreviousHistory(bp)
+    if #OmniCursorHistory == 0 or OmniCursorIndices.CurrentIndex <= OmniCursorIndices.StartIndex then
+        return
+    end
+
+    OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex - 1;
+    micro.InfoBar():Message("Going to previous history at index ", OmniCursorIndices.CurrentIndex)
+    GoToHistoryEntry(bp, OmniCursorHistory[OmniCursorIndices.CurrentIndex])
+end
+
+function GoToNextHistory(bp)
+    if #OmniCursorHistory == 0 or OmniCursorIndices.CurrentIndex >= OmniCursorIndices.EndIndex then
+        return
+    end
+
+    OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex + 1;
+    micro.InfoBar():Message("Going to next history at index ", OmniCursorIndices.CurrentIndex)
+    GoToHistoryEntry(bp, OmniCursorHistory[OmniCursorIndices.CurrentIndex])
+end
+
+function OmniCopyRelativePath(bp)
+    if bp.Buf == nil then return end
+
+    -- clipboard.Write(bp.Buf.Path, clipboard.ClipboardReg)
+    WriteToClipboardWorkaround(bp.Buf.Path)
+    micro.InfoBar():Message(bp.Buf.Path, " copied into clipboard")
+end
+
+function OmniCopyAbsolutePath(bp)
+    if bp.Buf == nil then return end
+    
+    -- clipboard.Write(bp.Buf.AbsPath, clipboard.ClipboardReg)
+    WriteToClipboardWorkaround(bp.Buf.AbsPath)
+    micro.InfoBar():Message(bp.Buf.AbsPath, " copied into clipboard")
+end
+
+function OmniHighlightOnly(bp)
+    local selectionText = ""
+    if bp.Cursor:HasSelection() then
+        selectionText = bp.Cursor:GetSelection()
+        selectionText = util.String(selectionText)
+    end
+    
+    micro.InfoBar():Prompt( "Highlight Then Find (regex) > ", 
+                            selectionText, "", OnTypingHighlight, OnSubmitHighlightFind)
+end
+
+function OmniJump(bp)
+    AssignJumpWordsToView(msg)
+    
+    OmniOriginalSearchIgnoreCase = bp.Buf.Settings["ignorecase"]
+    
+    -- NOTE:    Syntax highlighting could be used instead of search highlight using UpdateRules.
+    --          But would require me to use cursor to modify the buffer instead of modifying bytes.
+    --          Which will be a lot of work (and complications!!) plus polluting the history as well.
+    bp.Buf.Settings["ignorecase"] = false
+    bp.Buf.LastSearch = "\\b[A-Z]{2}"
+    bp.Buf.LastSearchRegex = true
+    bp.Buf.HighlightSearch = true
+    
+    micro.InfoBar():Prompt( "Select Word To Jump To > ", "", "Command", OnTypingJump, OnWordJump)
+end
+
+-- Testing auto complete for commands
+function TestCompleter(buf)
+    local activeCursor = buf:GetActiveCursor()
+    local input, argstart = buf:GetArg()
+
+    -- micro.Log("input:", input)
+    -- micro.Log("argstart:", argstart)
+
+    local suggestions = {}
+    local commands =
+    {
+        "set", 
+        "reset",
+        "setlocal",
+        "show",
+        "showkey"
+    }
+    
+    
+    for _, cmd in ipairs(commands) do
+        -- micro.Log("cmd:", cmd)
+        
+        if strings.HasPrefix(cmd, input) then
+            table.insert(suggestions, cmd)
+        end
+    end
+
+    -- sort.Strings(suggestions)
+    table.sort(suggestions, function(a, b) return a:upper() < b:upper() end)
+    
+    -- completions := make([]string, len(suggestions))
+    completions = {}
+    
+    for _, suggestion in ipairs(suggestions) do
+        local offset = activeCursor.X - argstart
+    
+        table.insert(completions, string.sub(suggestion, offset + 1, string.len(suggestion)))
+    end
+
+    return completions, suggestions
+    -- return {"test", "test2"}, {"test", "test A"}
 end
 
 function OmniTest(bp, args)
@@ -640,24 +911,23 @@ end
 
 function OmniTest2(bp, args)
     -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", TestECB, TestDoneCB)
-    local wd = os.Getwd()
+    -- local wd = os.Getwd()
+    -- micro.InfoBar():Message("Getwd: ", wd)
+    -- local bp = micro.CurPane()
+    
+    
+    
+    
+    -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", nil, OnWordJump)
 
-    micro.InfoBar():Message("Getwd: ", wd)
 end
-
 
 function OmniTest3(bp, args)
     -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", TestECB, TestDoneCB)
     -- local wd = os.Getwd()
     -- local filePath = bp.buf.AbsPath
-
 end
 
-function CheckCommand(command)
-    local _, error = shell.RunCommand(command)
-    if error ~= nil then return false end
-    return true
-end
 
 function init()
     -- config.MakeCommand("fzfinder", fzfinder, config.NoComplete)
@@ -673,6 +943,7 @@ function init()
     config.MakeCommand("OmniCopyAbsolutePath", OmniCopyAbsolutePath, config.NoComplete)
 
     config.MakeCommand("OmniHighlightOnly", OmniHighlightOnly, config.NoComplete)
+    config.MakeCommand("OmniJump", OmniJump, config.NoComplete)
 
 
     -- Convert history line diff to integer in the beginning
@@ -685,7 +956,7 @@ function init()
         end
     end
     
-    config.MakeCommand("OmniTest", OmniTest, config.NoComplete)
+    config.MakeCommand("OmniTest", OmniTest, TestCompleter)
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)
     config.MakeCommand("OmniTest3", OmniTest3, config.NoComplete)
 
