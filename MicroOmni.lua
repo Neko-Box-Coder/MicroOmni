@@ -20,7 +20,7 @@ local OmniLocalSearchArgs = config.GetGlobalOption("OmniLocalSearchArgs")
 local OmniSelectType = config.GetGlobalOption("OmniSelectType")
 local OmniHistoryLineDiff = config.GetGlobalOption("OmniHistoryLineDiff")
 
--- TODO(NOW): Allow setting highlight to use regex or not
+-- TODO: Allow setting highlight to use regex or not
 
 local fzfCmd =  config.GetGlobalOption("fzfcmd")
 local fzfOpen = config.GetGlobalOption("fzfopen")
@@ -921,7 +921,6 @@ function OmniTest2(bp, args)
     
     
     -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", nil, OnWordJump)
-
 end
 
 function OmniTest3(bp, args)
@@ -930,6 +929,17 @@ function OmniTest3(bp, args)
     -- local filePath = bp.buf.AbsPath
 end
 
+function OmniNewTabRight(bp)
+    local currentActiveIndex = micro.Tabs():Active()
+    bp:NewTabCmd({})
+    bp:TabMoveCmd({tostring(currentActiveIndex + 2)})
+end
+
+function OmniNewTabLeft(bp)
+    local currentActiveIndex = micro.Tabs():Active()
+    bp:NewTabCmd({})
+    bp:TabMoveCmd({tostring(currentActiveIndex + 1)})
+end
 
 function init()
     -- config.MakeCommand("fzfinder", fzfinder, config.NoComplete)
@@ -946,7 +956,9 @@ function init()
 
     config.MakeCommand("OmniHighlightOnly", OmniHighlightOnly, config.NoComplete)
     config.MakeCommand("OmniJump", OmniJump, config.NoComplete)
-
+    
+    config.MakeCommand("OmniNewTabRight", OmniNewTabRight, config.NoComplete)
+    config.MakeCommand("OmniNewTabLeft", OmniNewTabLeft, config.NoComplete)
 
     -- Convert history line diff to integer in the beginning
     if OmniHistoryLineDiff == nil or OmniHistoryLineDiff == "" then
@@ -986,7 +998,7 @@ function init()
             end
         end
         
-        micro.InfoBar():Error(  missingCommandsString.."are missing. Search may not work properly")
+        micro.InfoBar():Error(missingCommandsString.."are missing. Search may not work properly")
     end
 
 end

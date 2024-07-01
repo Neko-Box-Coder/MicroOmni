@@ -1,6 +1,6 @@
 # 🧰 Micro Omni
 
-Just a swiss army knife plugin that adds the functionalities I have from VSCodium.
+A swiss army knife plugin that super charges ⚡️ your micro text editor
 
 List of features not in any particular order:
 - 🔍️ Fuzzy Search For Text Globally
@@ -12,6 +12,7 @@ List of features not in any particular order:
 - 📁 Copy Current File Path
 - 🔦 Highlight Only (Before finding next)
 - 🚀 Word Jumping (EasyMotion)
+- 📑 Newtab Next To Current Tab
 - (WIP) Bracket jumping without on top of it
 - (WIP) Contect selection within brackets
 - (WIP) Diff view
@@ -89,6 +90,7 @@ OmniGlobalSearchArgs =  "--bind 'alt-f:reload:rg -i -uu -n {q}' "..
 
 ![Local Gif](./Resources/LocalSearch.gif)
 
+Recommended binding:
 ```json
 {
     "Alt-f": "command:OmniLocalSearch"
@@ -189,11 +191,10 @@ Recommended binding:
 }
 ```
 
-- `OmniHighlightOnly`: TODO
+To highlight anything without going to it, launch the `OmniHighlightOnly` command.
+
 
 ## 🚀 Word Jumping (EasyMotion)
-
-TODO
 
 Recommended binding:
 ```json
@@ -201,3 +202,17 @@ Recommended binding:
     "Alt-j": "command:OmniJump"
 }
 ```
+
+To jump to a word anywhere on the screen, launch the `OmniJump` command **WITH** a keybinding
+
+## 📑 Newtab Next To Current Tab
+
+Recommended binding:
+```json
+{
+    "Alt-t": "command:OmniNewTabRight"
+}
+```
+
+You can create a newtab either on the right or left of the current tab by launching 
+`OmniNewTabRight` or `OmniNewTabLeft` command
