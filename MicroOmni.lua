@@ -846,8 +846,10 @@ function OmniHighlightOnly(bp)
 end
 
 function OmniJump(bp)
-    AssignJumpWordsToView(msg)
+    bp.Cursor:ResetSelection()
+    bp.Buf:ClearCursors()
     
+    AssignJumpWordsToView(msg)
     OmniOriginalSearchIgnoreCase = bp.Buf.Settings["ignorecase"]
     
     -- NOTE:    Syntax highlighting could be used instead of search highlight using UpdateRules.
