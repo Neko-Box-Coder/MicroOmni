@@ -777,10 +777,16 @@ function OmniSelect(bp, args)
         OmniSelectType = "relative"
     end
 
+    local selectLineCount = tonumber(args[1])
+    if selectLineCount == nil then
+        micro.InfoBar():Error(args[1].." is not a valid target selection line")
+        return
+    end
+
     if OmniSelectType == "relative" then
-        targetLine = targetLine + tonumber(args[1])
+        targetLine = targetLine + selectLineCount
     else
-        targetLine = tonumber(args[1]) - 1
+        targetLine = selectLineCount - 1
     end
     
     local selectX = 0
