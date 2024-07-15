@@ -23,9 +23,21 @@ List of features:
 - (WIP) Minimap
 
 ## 📦️ Installation
-This is still a WIP plugin so don't have any releases yet. To use this, you will need to clone it.
+You can install MicroOmni using `micro -plugin install OmniMicro` by either
+- Add it to `"pluginrepos"` in `settings.json`, like
+``` json
+"pluginrepos": [
+    "https://raw.githubusercontent.com/Neko-Box-Coder/MicroOmni/master/repo.json"
+]
+```
+- Or using the [unofficial-plugin-channel](https://github.com/Neko-Box-Coder/unofficial-plugin-channel), like
+```json
+"pluginchannels": [
+    "https://raw.githubusercontent.com/Neko-Box-Coder/unofficial-plugin-channel/main/channel.json"
+]
+```
 
-`git clone https://github.com/Neko-Box-Coder/MicroOmni` to your micro `plug` directory
+- Alternatively, you can `git clone https://github.com/Neko-Box-Coder/MicroOmni` to your micro `plug` directory
 
 
 ## 📐 Requirements
