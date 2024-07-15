@@ -23,8 +23,8 @@ local OmniHistoryLineDiff = config.GetGlobalOption("OmniHistoryLineDiff")
 
 -- TODO: Allow setting highlight to use regex or not
 
-local fzfCmd =  config.GetGlobalOption("fzfcmd")
-local fzfOpen = config.GetGlobalOption("fzfopen")
+local OmniFzfCmd = config.GetGlobalOption("OmniFzfCmd")
+local OmniNewFileMethod = config.GetGlobalOption("OmniNewFileMethod")
 
 
 local OmniCursorHistory = {}
@@ -59,12 +59,12 @@ function getOS()
 end
 
 function setupFzf(bp)
-    if fzfCmd == nil then
-        fzfCmd = "fzf"
+    if OmniFzfCmd == nil then
+        OmniFzfCmd = "fzf"
     end
 
-    if fzfOpen == nil then
-        fzfOpen = "thispane"
+    if OmniNewFileMethod == nil then
+        OmniNewFileMethod = "smart_newtab"
     end
 end
 
@@ -137,12 +137,12 @@ function FindContent(str, searchLoc)
         selectedText = selectedText:gsub("'", "'\\''")
         firstWord = firstWord:gsub("'", "'\\''")
         fzfArgs = OmniContentArgs:gsub("'", "'\\''")
-        finalCmd = "rg -F -i -uu -n '\\''"..firstWord.."'\\'' | "..fzfCmd.." "..fzfArgs.." -q '\\''"..selectedText.."'\\''"
+        finalCmd = "rg -F -i -uu -n '\\''"..firstWord.."'\\'' | "..OmniFzfCmd.." "..fzfArgs.." -q '\\''"..selectedText.."'\\''"
     else
         selectedText = selectedText:gsub("'", '"')
         firstWord = firstWord:gsub("'", '""')
         fzfArgs = OmniContentArgs:gsub("'", '"')
-        finalCmd = "rg -F -i -uu -n \""..firstWord.."\" | "..fzfCmd.." "..fzfArgs.." -q \""..selectedText.."\""
+        finalCmd = "rg -F -i -uu -n \""..firstWord.."\" | "..OmniFzfCmd.." "..fzfArgs.." -q \""..selectedText.."\""
     end
 
 
@@ -178,18 +178,18 @@ function FindContent(str, searchLoc)
     if err ~= nil or output == "--" then
         -- micro.InfoBar():Error("Error is: ", err:Error())
     else
-        local filePath, lineNumber = output:match("^(.-):%s*(%d+):")
+        local path, lineNumber = output:match("^(.-):%s*(%d+):")
         
         if searchLoc ~= nil and searchLoc ~= "" then
-            -- micro.InfoBar():Message("Open path is ", filepath.Abs(OmniContentFindPath.."/"..filePath))
-            filePath = OmniContentFindPath.."/"..filePath
+            -- micro.InfoBar():Message("Open path is ", filepath.Abs(OmniContentFindPath.."/"..path))
+            path = OmniContentFindPath.."/"..path
         end
         
-        fzfParseOutput(filePath, bp, lineNumber)
+        fzfParseOutput(path, bp, lineNumber)
     end
 end
 
-
+-- NOTE: lineNum is string
 function fzfParseOutput(output, bp, lineNum)
     micro.Log("fzfParseOutput called")
     if output ~= "" then
@@ -198,29 +198,74 @@ function fzfParseOutput(output, bp, lineNum)
         if file == nil then
             return
         end
-
-        -- micro.InfoBar():Message("file is ", file)
-
-        if fzfOpen == "newtab" then
-           bp:NewTabCmd({file})
-        else
-            local buf, err = buffer.NewBufferFromFile(file)
-            if err ~= nil then return end
-            
-            if fzfOpen == "vsplit" then
-                bp:VSplitIndex(buf, true)
-            elseif fzfOpen == "hsplit" then
-                bp:HSplitIndex(buf, true)
-            else
-                bp:OpenBuffer(buf)
-            end
-        end
-
-        -- micro.Log("fzfParseOutput new buffer")
-        micro.CurPane():GotoCmd({lineNum})
-        -- micro.Log("fzfParseOutput new line")
+        HandleOpenFile(file, bp, lineNum)
     end
 end
+
+function HandleOpenFile(path, bp, lineNum)
+    if OmniNewFileMethod == "smart_newtab" then
+        SmartNewTab(path, bp, lineNum)
+        return
+    end
+
+    if OmniNewFileMethod == "newtab" then
+       bp:NewTabCmd({path})
+    else
+        local buf, err = buffer.NewBufferFromFile(path)
+        if err ~= nil then return end
+        
+        if OmniNewFileMethod == "vsplit" then
+            bp:VSplitIndex(buf, true)
+        elseif OmniNewFileMethod == "hsplit" then
+            bp:HSplitIndex(buf, true)
+        else
+            bp:OpenBuffer(buf)
+        end
+    end
+
+    -- micro.Log("fzfParseOutput new buffer")
+    micro.CurPane():GotoCmd({lineNum})
+end
+
+-- NOTE: lineNum is string
+function SmartNewTab(path, bp, lineNum)
+    local cleanFilepath = filepath.Clean(path)
+    
+    -- If current pane is empty, we can open in it
+    if not path_exists(micro.CurPane().Buf.AbsPath) or IsPathDir(micro.CurPane().Buf.AbsPath) then
+        if #micro.CurPane().Buf:Bytes() == 0 then
+            bp:OpenCmd({cleanFilepath})
+            micro.CurPane():GotoCmd({lineNum})
+            return
+        end
+    end
+
+    -- Otherwise find if there's any existing panes
+    for i = 1, #micro.Tabs().List do
+        for j = 1, #micro.Tabs().List[i].Panes do
+            local currentPane = micro.Tabs().List[i].Panes[j]
+            local currentBuf = currentPane.Buf
+            if  currentBuf ~= nil and 
+                (currentBuf.AbsPath == cleanFilepath or currentBuf.Path == cleanFilepath) then
+                
+
+                -- NOTE: SetActive functions has index starting at 0 instead lol
+                micro.Tabs():SetActive(i - 1)
+                micro.Tabs().List[i]:SetActive(j - 1)
+                currentPane:GotoCmd({lineNum})
+                -- currentPane:Relocate()
+                return
+            end
+        end
+    end
+    
+    -- If not just open it
+    local currentActiveIndex = micro.Tabs():Active()
+    bp:NewTabCmd({cleanFilepath})
+    bp:TabMoveCmd({tostring(currentActiveIndex + 2)})
+    micro.CurPane():GotoCmd({lineNum})
+end
+
 
 function LocBoundCheck(buf, loc)
     local totalNumOfLines = buf:LinesNum()
@@ -255,38 +300,7 @@ function GoToHistoryEntry(bp, entry)
     local entryFilePath = OmniCursorFilePathMap[entry.FileId]
 
     -- micro.Log("We have ", #micro.Tabs().List, " tabs")
-    
-    for i = 1, #micro.Tabs().List do
-        -- micro.Log("Tab ", i, " has ", #micro.Tabs().List[i].Panes, " panes")
-        for j = 1, #micro.Tabs().List[i].Panes do
-            local currentPane = micro.Tabs().List[i].Panes[j]
-            local currentBuf = currentPane.Buf
-            if currentBuf ~= nil and currentBuf.AbsPath == entryFilePath then
-                currentPane.Cursor:ResetSelection()
-                currentPane.Buf:ClearCursors()
-                currentPane.Cursor:GotoLoc(LocBoundCheck(currentBuf, entry.CursorLoc))
-
-                -- NOTE: SetActive functions has index starting at 0 instead lol
-                micro.Tabs():SetActive(i - 1)
-                micro.Tabs().List[i]:SetActive(j - 1)
-                currentPane:Relocate()
-                return
-            end
-        end
-    end
-    
-    local entryRelativePath, err = filepath.Rel(os.Getwd(), entryFilePath)
-    
-    if err ~= nil or entryRelativePath == nil then
-        bp:NewTabCmd({entryFilePath})
-    else
-        bp:NewTabCmd({entryRelativePath})
-    end
-    
-    if  micro.CurPane() == nil or micro.CurPane().Cursor == nil or micro.CurPane().Buf == nil then
-        return
-    end
-    
+    HandleOpenFile(entryFilePath, bp, "1")
     micro.CurPane().Cursor:GotoLoc(LocBoundCheck(micro.CurPane().Buf, entry.CursorLoc))
     micro.CurPane():Relocate()
 end
@@ -1108,6 +1122,8 @@ function OmniContent(bp)
 end
 
 function OmniLocalSearch(bp, args)
+    setupFzf(bp)
+    
     if OmniLocalSearchArgs == nil or OmniLocalSearchArgs == "" then
         OmniLocalSearchArgs =   "--bind 'start:reload:bat -n --decorations always {filePath}' "..
                                 "-i --reverse "..
@@ -1123,7 +1139,7 @@ function OmniLocalSearch(bp, args)
         localSearchArgs = localSearchArgs.." -q '"..util.String(bp.Cursor:GetSelection()).."'"
     end
 
-    local output, err = shell.RunInteractiveShell(fzfCmd.." "..localSearchArgs, false, true)
+    local output, err = shell.RunInteractiveShell(OmniFzfCmd.." "..localSearchArgs, false, true)
 
     if err ~= nil or output == "" then
         -- micro.InfoBar():Error("Error is: ", err:Error())
@@ -1136,6 +1152,8 @@ function OmniLocalSearch(bp, args)
 end
 
 function OmniGotoFile(bp)
+    setupFzf(bp)
+    
     if OmniGotoFileArgs == nil or OmniGotoFileArgs == "" then
         OmniGotoFileArgs =  "-i --reverse "..
                             "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
@@ -1149,13 +1167,13 @@ function OmniGotoFile(bp)
         localGotoFileArgs = localGotoFileArgs.." -q '"..util.String(bp.Cursor:GetSelection()).."'"
     end
 
-    local output, err = shell.RunInteractiveShell(fzfCmd.." "..localGotoFileArgs, false, true)
+    local output, err = shell.RunInteractiveShell(OmniFzfCmd.." "..localGotoFileArgs, false, true)
 
     if err ~= nil or output == "" then
         -- micro.InfoBar():Error("Error is: ", err:Error())
     else
         -- local lineNumber = output:match("^%s*(.-)%s.*")
-        -- local filePath, lineNumber = output:match("^(.-):%s*(%d+):")
+        -- local path, lineNumber = output:match("^(.-):%s*(%d+):")
         
         -- micro.InfoBar():Message("Output is ", output, " and extracted lineNumber is ", lineNumber)
         fzfParseOutput(output, bp, "1")
@@ -1354,7 +1372,7 @@ end
 function OmniTest3(bp, args)
     -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", TestECB, TestDoneCB)
     -- local wd = os.Getwd()
-    -- local filePath = bp.buf.AbsPath
+    -- local path = bp.buf.AbsPath
 end
 
 function OmniNewTabRight(bp)

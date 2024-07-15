@@ -50,7 +50,7 @@ All of these are available for Unix and Windows
 
 Alternatively, you can get all the required executables you need for Windows in [Release](https://github.com/Neko-Box-Coder/MicroOmni/releases)
 > [!NOTE]
-> The directory that has the required executables must be added to the PATH environment variable
+> On Windows, the directory that has the required executables must be added to the PATH environment variable
 
 
 ## 🔍️ Fuzzy Search For Text Globally
@@ -75,10 +75,11 @@ To find a with keyword(s), launch command `OmniGlobalSearch` which is bindable t
     - alt-f: Search again with text in the input field (**Non fuzzy** but case insensitive)
 
 ### ⚙️ Fuzzy Search Settings
-- `fzfCmd`: (Extending from fzfinder) The `fzf` location.
+- `OmniFzfCmd`: The `fzf` location.
     - Defaults to `"fzf"`
-- `fzfOpen`: (Extending from fzfinder) How to open the new file. Available options are:
-    - `thispane`: (Default) Opens in current pane
+- `OmniNewFileMethod`: (Extending from fzfinder) How to open the new file. Available options are:
+    - `smart_newtab`: (Default) Opens the new file in newtab if not opened already
+    - `thispane`: Opens in current pane
     - `newtab`: Opens in new tab
     - `vsplit`: Opens in new pane as vertical split
     - `hsplit`: Opens in new pane as horizontal split
@@ -141,6 +142,7 @@ The default control is the same as "Fuzzy Search For Files Recursively".
 To search, simply launch the `OmniGotoFile` command.
 
 ### ⚙️ Fuzzy Search Settings
+- `OmniNewFileMethod`: Same as previous
 - `OmniGotoFileArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
 OmniGotoFileArgs =  "-i --reverse "..
@@ -182,6 +184,7 @@ Recommended binding:
 
 
 ### ⚙️ Global Cursor History Settings
+- `OmniNewFileMethod`: Same as previous
 - `OmniHistoryLineDiff`: Sets how many line difference count as new cursor history. Defaults to 5
 
 ## 🔲 Centering Cursor To Viewport
