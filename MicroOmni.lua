@@ -17,6 +17,7 @@ local ioutil = import("io/ioutil")
 
 local OmniContentArgs = config.GetGlobalOption("OmniGlobalSearchArgs")
 local OmniLocalSearchArgs = config.GetGlobalOption("OmniLocalSearchArgs")
+local OmniGotoFileArgs = config.GetGlobalOption("OmniGotoFileArgs")
 local OmniSelectType = config.GetGlobalOption("OmniSelectType")
 local OmniHistoryLineDiff = config.GetGlobalOption("OmniHistoryLineDiff")
 
@@ -1134,6 +1135,33 @@ function OmniLocalSearch(bp, args)
     end
 end
 
+function OmniGotoFile(bp)
+    if OmniGotoFileArgs == nil or OmniGotoFileArgs == "" then
+        OmniGotoFileArgs =  "-i --reverse "..
+                            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+                            "alt-up:half-page-up,alt-down:half-page-down "..
+                            "--preview-window 'down' "..
+                            "--preview 'bat -f -n {}'"
+    end
+
+    local localGotoFileArgs = OmniGotoFileArgs
+    if bp.Cursor:HasSelection() then
+        localGotoFileArgs = localGotoFileArgs.." -q '"..util.String(bp.Cursor:GetSelection()).."'"
+    end
+
+    local output, err = shell.RunInteractiveShell(fzfCmd.." "..localGotoFileArgs, false, true)
+
+    if err ~= nil or output == "" then
+        -- micro.InfoBar():Error("Error is: ", err:Error())
+    else
+        -- local lineNumber = output:match("^%s*(.-)%s.*")
+        -- local filePath, lineNumber = output:match("^(.-):%s*(%d+):")
+        
+        -- micro.InfoBar():Message("Output is ", output, " and extracted lineNumber is ", lineNumber)
+        fzfParseOutput(output, bp, "1")
+    end
+end
+
 function OmniCenter(bp)
     local view = bp:GetView()
     local oriX = bp.Cursor.Loc.X
@@ -1349,6 +1377,7 @@ function init()
     -- config.MakeCommand("fzfinder", fzfinder, config.NoComplete)
     config.MakeCommand("OmniGlobalSearch", OmniContent, config.NoComplete)
     config.MakeCommand("OmniLocalSearch", OmniLocalSearch, config.NoComplete)
+    config.MakeCommand("OmniGotoFile", OmniGotoFile, config.NoComplete)
     config.MakeCommand("OmniCenter", OmniCenter, config.NoComplete)
     config.MakeCommand("OmniJumpSelect", OmniSelect, config.NoComplete)
 

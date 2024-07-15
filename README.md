@@ -84,12 +84,12 @@ To find a with keyword(s), launch command `OmniGlobalSearch` which is bindable t
     - `hsplit`: Opens in new pane as horizontal split
 - `OmniGlobalSearchArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
-OmniGlobalSearchArgs =  "--bind 'alt-f:reload:rg -i -uu -n {q}' "..
-                        "--delimiter : -i "..
-                        "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-                        "alt-up:half-page-up,alt-down:half-page-down "..
-                        "--preview-window '+{2}-/2' "..
-                        "--preview 'bat -f -n --highlight-line {2} {1}'"
+OmniContentArgs =   "--bind 'alt-f:reload:rg -i -F -uu -n {q}' "..
+                    "--delimiter : -i --reverse "..
+                    "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+                    "alt-up:half-page-up,alt-down:half-page-down "..
+                    "--preview-window 'down,+{2}-/2' "..
+                    "--preview 'bat -f -n --highlight-line {2} {1}'"
 ```
 
 ## 🧭 Fuzzy Search For Text Locally
@@ -115,14 +115,16 @@ To search, simply launch the `OmniLocalSearch` command.
 the current file path. It defaults to the following:
 ```lua
 OmniLocalSearchArgs =   "--bind 'start:reload:bat -n --decorations always {filePath}' "..
-                        "-i "..
+                        "-i --reverse "..
                         "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
                         "alt-up:half-page-up,alt-down:half-page-down "..
-                        "--preview-window '+{1}-/2' "..
+                        "--preview-window 'down,+{1}-/2' "..
                         "--preview 'bat -f -n --highlight-line {1} {filePath}'"
 ```
 
 ## 📝 Fuzzy Search For Files
+
+![Search File Gif](./Resources/FileSearch.gif)
 
 Recommended binding:
 ```json
@@ -141,7 +143,11 @@ To search, simply launch the `OmniGotoFile` command.
 ### ⚙️ Fuzzy Search Settings
 - `OmniGotoFileArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
-TODO
+OmniGotoFileArgs =  "-i --reverse "..
+                    "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+                    "alt-up:half-page-up,alt-down:half-page-down "..
+                    "--preview-window 'down' "..
+                    "--preview 'bat -f -n {}'"
 ```
 
 
