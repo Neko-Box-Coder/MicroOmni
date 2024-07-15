@@ -2,20 +2,23 @@
 
 A swiss army knife plugin that super charges ⚡️ your micro text editor
 
-List of features not in any particular order:
-- 🔍️ Fuzzy Search For Text Globally
-    - This extends from fzfinder, but can work independently
-- 🧭 Fuzzy Search For Text Locally
-- 🔲 Centering Cursor To Viewport
-- 🦘 Jump Selection
-- 📔 Global Cursor History
-- 📁 Copy Current File Path
-- 🔦 Highlight Only (Before finding next)
-- 🚀 Word Jumping (EasyMotion)
-- 📑 Newtab Next To Current Tab
+List of features:
+- ⚓️ Project Navigations:
+    - [🔍️ Fuzzy Search For Text Globally](#%EF%B8%8F-fuzzy-search-for-text-globally)
+    - [🧭 Fuzzy Search For Text Locally](#-fuzzy-search-for-text-locally)
+    - [📝 Fuzzy Search For Files](#-fuzzy-search-for-files)
+- 🖱️ Cursor Control:
+    - [🚀 Word Jumping (EasyMotion)](#-word-jumping-easymotion)
+    - [📔 Global Cursor History](#-global-cursor-history)
+    - [🔲 Centering Cursor To Viewport](#-centering-cursor-to-viewport)
+    - [🦘 Jump Selection](#-jump-selection)
+- 📜 Buffer/Tab Control:
+    - [🧦 Diff View](#-diff-view)
+    - [🔦 Highlight Only (Before finding next)](#-highlight-only-before-finding-next)
+    - [📑 Newtab Next To Current Tab](#-newtab-next-to-current-tab)
+    - [📁 Copy Current File Path](#-copy-current-file-path)
 - (WIP) Bracket jumping without on top of it
 - (WIP) Contect selection within brackets
-- (WIP) Diff view
 - (WIP) Resize split with keyboard <!-- Using https://github.com/zyedidia/micro/issues/1807#issuecomment-1907899274 -->
 - (WIP) Minimap
 
@@ -27,11 +30,12 @@ This is still a WIP plugin so don't have any releases yet. To use this, you will
 
 ## 📐 Requirements
 - micro
-    - Build from upstream **master**
-    - Alternatively, you can use pre-built binaries from [my branch](https://github.com/Neko-Box-Coder/micro-dev))
+    - micro [nightly](https://github.com/zyedidia/micro/releases/tag/nightly)
+    - [Or from my branch (dev) github action artifacts](https://github.com/Neko-Box-Coder/micro-dev/actions))
 - fzf
 - ripgrep
 - bat
+- diff (Windows)
 
 All of these are available for Unix and Windows
 > Windows link to requirements
@@ -41,6 +45,13 @@ All of these are available for Unix and Windows
 > [https://github.com/BurntSushi/ripgrep/releases](https://github.com/BurntSushi/ripgrep/releases)
 >
 > [https://github.com/sharkdp/bat/releases](https://github.com/sharkdp/bat/releases)
+>
+> [https://gnuwin32.sourceforge.net/packages/diffutils.htm](https://gnuwin32.sourceforge.net/packages/diffutils.htm)
+
+Alternatively, you can get all the required executables you need for Windows in [Release](https://github.com/Neko-Box-Coder/MicroOmni/releases)
+> [!NOTE]
+> The directory that has the required executables must be added to the PATH environment variable
+
 
 ## 🔍️ Fuzzy Search For Text Globally
 
@@ -56,13 +67,8 @@ Recommended binding:
 ```
 
 To find a with keyword(s), launch command `OmniGlobalSearch` which is bindable to a key.
-1. First it will ask you which directory to search from, if a relative path is give, 
-this will be relative to current working directory (not to be confused with current file directory).
-Leaving empty will default to current working directory.
-    - `{fileDir}` can be used to substitute the directory path of the current file. 
-2. If any text was selected prior to launching the `OmniGlobalSearch` command, that text will be used
-for **fuzzy** searching. If not, a prompt will ask you what to **fuzzy** search.
-3. If successful, a fzf window will be launched. Here are the keybindings by default:
+1. `{fileDir}` can be used to substitute the directory path of the current file. 
+2. If successful, a fzf window will be launched. Here are the keybindings by default:
     - up/down: Navigate results
     - alt-up / alt-down: Navigate half page of results
     - page-up / page-down: Scroll up and down for the preview window
@@ -116,8 +122,65 @@ OmniLocalSearchArgs =   "--bind 'start:reload:bat -n --decorations always {fileP
                         "--preview 'bat -f -n --highlight-line {1} {filePath}'"
 ```
 
+## 📝 Fuzzy Search For Files
+
+Recommended binding:
+```json
+{
+    "Alt-G": "command:OmniGotoFile"
+    //Windows
+    "Alt-Shift-G": "command:OmniGotoFile"
+}
+```
+
+Similar to "Fuzzy Search For Files Recursively", this do a fuzzy search for all the files
+The default control is the same as "Fuzzy Search For Files Recursively".
+
+To search, simply launch the `OmniGotoFile` command.
+
+### ⚙️ Fuzzy Search Settings
+- `OmniGotoFileArgs`: Argument to be passed to fzf. It defaults to the following:
+```lua
+TODO
+```
+
+
+## 🚀 Word Jumping (EasyMotion)
+To jump to a word anywhere on the screen, launch the `OmniJump` command **WITH** a keybinding
+
+![Word jumping gif](./Resources/WordJump.gif)
+
+Recommended binding:
+```json
+{
+    "Alt-j": "command:OmniJump"
+}
+```
+
+
+## 📔 Global Cursor History
+When you are editing multiple files or jumping between different functions, 
+a history of the cursor location is stored. You can go to previous or next cursor position
+by launching the `OmniPreviousHistory` and `OmniNextHistory` commands.
+
+This is similar to the navigate back and forward commands in VSCode
+![Global Cursor History Gif](./Resources/GlobalHistory.gif)
+
+Recommended binding:
+```json
+{
+    "Alt-{": "command:OmniPreviousHistory",
+    "Alt-}": "command:OmniNextHistory"
+}
+```
+
+
+### ⚙️ Global Cursor History Settings
+- `OmniHistoryLineDiff`: Sets how many line difference count as new cursor history. Defaults to 5
 
 ## 🔲 Centering Cursor To Viewport
+It centers your cursor to the middle of your viewport.
+
 ![Center Gif](./Resources/Center.gif)
 Recommended binding:
 ```json
@@ -125,8 +188,6 @@ Recommended binding:
     "Alt-m": "command:OmniCenter"
 }
 ```
-
-It centers your cursor to the middle of your viewport.
 
 ## 🦘 Jump Selection
 ![Jump Select Gif](./Resources/JumpSelect.gif)
@@ -149,41 +210,23 @@ This can be configured to use absolute line number. See settings.
 ### ⚙️ Jump Selection Type Settings
 - `OmniSelectType`: Sets the jump selection type. Can either be `relative` (default) or `absolute`
 
+## 🧦 Diff View
+To compare the current buffer with another buffer of file, launch the `OmniDiff` command.
+Buffers are not required to be saved in order to perform the diff.
 
-## 📔 Global Cursor History
-![Global Cursor History Gif](./Resources/GlobalHistory.gif)
-
-Recommended binding:
-```json
-{
-    "Alt-{": "command:OmniPreviousHistory",
-    "Alt-}": "command:OmniNextHistory"
-}
-```
-
-When you are editing multiple files or jumping between different functions, 
-a history of the cursor location is stored. You can go to previous or next cursor position
-by launching the `OmniPreviousHistory` and `OmniNextHistory` commands.
-
-This is similar to the navigate back and forward commands in VSCode
-
-### ⚙️ Global Cursor History Settings
-- `OmniHistoryLineDiff`: Sets how many line difference count as new cursor history. Defaults to 5
-
-<!-- - `fzfpath`: The root path to search from, can be absolute path or relative to open file by setting to `relative`. -->
-<!--     -If empty or not specified, defaults to directory where micro was launched -->
-
-## 📁 Copy Current File Path
+![Diff View Gif](./Resources/FileDiff.gif)
 
 Recommended binding:
 
 None (Invoke it in command pane)
 
-You can copy the current file absolute or relative path with `OmniCopyRelativePath` and 
-`OmniCopyAbsolutePath` command.
 
 
 ## 🔦 Highlight Only (Before finding next)
+To highlight anything without going to it, launch the `OmniHighlightOnly` command.
+
+![Highlight Gif](./Resources/Highlight.gif)
+
 Recommended binding:
 ```json
 {
@@ -191,21 +234,12 @@ Recommended binding:
 }
 ```
 
-To highlight anything without going to it, launch the `OmniHighlightOnly` command.
-
-
-## 🚀 Word Jumping (EasyMotion)
-
-Recommended binding:
-```json
-{
-    "Alt-j": "command:OmniJump"
-}
-```
-
-To jump to a word anywhere on the screen, launch the `OmniJump` command **WITH** a keybinding
 
 ## 📑 Newtab Next To Current Tab
+You can create a newtab either on the right or left of the current tab by launching 
+`OmniNewTabRight` or `OmniNewTabLeft` command
+
+![New Tab Gif](./Resources/NewTab.gif)
 
 Recommended binding:
 ```json
@@ -214,5 +248,13 @@ Recommended binding:
 }
 ```
 
-You can create a newtab either on the right or left of the current tab by launching 
-`OmniNewTabRight` or `OmniNewTabLeft` command
+
+## 📁 Copy Current File Path
+You can copy the current file absolute or relative path with `OmniCopyRelativePath` and 
+`OmniCopyAbsolutePath` command.
+
+Recommended binding:
+
+None (Invoke it in command pane)
+
+
