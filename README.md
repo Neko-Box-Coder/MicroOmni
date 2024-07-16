@@ -190,7 +190,10 @@ Recommended binding:
 ```json
 {
     "Alt-{": "command:OmniPreviousHistory",
-    "Alt-}": "command:OmniNextHistory"
+    "Alt-}": "command:OmniNextHistory",
+    //Windows
+    "Alt-Shift-{": "command:OmniPreviousHistory",
+    "Alt-Shift-}": "command:OmniNextHistory"
 }
 ```
 
@@ -236,6 +239,13 @@ To compare the current buffer with another buffer of file, launch the `OmniDiff`
 Buffers are not required to be saved in order to perform the diff.
 
 ![Diff View Gif](./Resources/FileDiff.gif)
+
+When being asked on what to diff, you can either specify a **filename** or a **tab**
+The syntax for diffing a tab is as follow
+`tab:[+/-]<tab index>[:<split index>]`
+
+With `+` or `-` means it will be relative tab index, or absolute otherwise, similar to `tabmove`.
+The split index can be used to specify which split to be diff against
 
 Recommended binding:
 
