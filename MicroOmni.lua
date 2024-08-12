@@ -591,11 +591,11 @@ function AssignJumpWordsToView(msg)
     local leftJumpWords = {}
     
     if viewMid ~= 0 then
-        leftOriginalWords, leftJumpWords = AssignJumpWords(   leftMajorChars..leftMinorChars, 
-                                                                    rightMajorChars..rightMinorChars, 
-                                                                    viewStart, 
-                                                                    viewMid - 1,
-                                                                    msg)
+        leftOriginalWords, leftJumpWords = AssignJumpWords( leftMajorChars..leftMinorChars, 
+                                                            rightMajorChars..rightMinorChars, 
+                                                            viewStart, 
+                                                            viewMid - 1,
+                                                            msg)
     end
     
     OmniOriginalWordsRecords = {}
@@ -1146,6 +1146,7 @@ function OmniLocalSearch(bp, args)
     else
         local lineNumber = output:match("^%s*(.-)%s.*")
         -- micro.InfoBar():Message("Output is ", output, " and extracted lineNumber is ", lineNumber)
+        micro.CurPane().Cursor:ResetSelection()
         micro.CurPane():GotoCmd({lineNumber})
         micro.CurPane():Center()
     end
