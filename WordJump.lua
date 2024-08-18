@@ -130,7 +130,7 @@ function AssignJumpWordsToView(msg)
     local rightMinorChars = "HYUIOPNM"
 
     local rightOriginalWords, rightJumpWords = AssignJumpWords( rightMajorChars..rightMinorChars, 
-                                                                leftMajorChars..leftMinorChars, 
+                                                                rightMajorChars..rightMinorChars, 
                                                                 viewMid, 
                                                                 viewEnd,
                                                                 msg)
@@ -140,7 +140,7 @@ function AssignJumpWordsToView(msg)
     
     if viewMid ~= 0 then
         leftOriginalWords, leftJumpWords = AssignJumpWords( leftMajorChars..leftMinorChars, 
-                                                            rightMajorChars..rightMinorChars, 
+                                                            leftMajorChars..leftMinorChars, 
                                                             viewStart, 
                                                             viewMid - 1,
                                                             msg)
