@@ -17,7 +17,7 @@ local OmniOriginalSearchIgnoreCase = false
 local OmniJumpWordsRecords = {}
 local OmniOriginalWordsRecords = {}
 
-function AssignJumpWords(majorChars, minorChars, rowIndexStart, rowIndexEnd, CurrentJumpChar)
+function AssignJumpWords(majorChars, minorChars, rowIndexStart, rowIndexEnd, currentJumpChar)
     micro.Log("rowIndexStart:", rowIndexStart)
     micro.Log("rowIndexEnd:", rowIndexEnd)
     micro.Log("string.len(majorChars):", string.len(majorChars))
@@ -71,8 +71,8 @@ function AssignJumpWords(majorChars, minorChars, rowIndexStart, rowIndexEnd, Cur
                         -- jumpWordToRc[currentMajorChar..currentMinorChar] = {i, j - 1}
                         jumpWordToRc[currentMajorChar..currentMinorChar] = {i, charIndex - 1}
 
-                        if CurrentJumpChar ~= nil and CurrentJumpChar ~= "" then
-                            if CurrentJumpChar == currentMajorChar then
+                        if currentJumpChar ~= nil and currentJumpChar ~= "" then
+                            if currentJumpChar == currentMajorChar then
                                 currentLineBytes[j - 1] = string.byte(string.lower(currentMajorChar))
                                 currentLineBytes[j] = string.byte(currentMinorChar)
                             end
