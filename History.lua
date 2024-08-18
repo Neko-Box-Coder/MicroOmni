@@ -2,8 +2,10 @@ local micro = import("micro")
 local config = import("micro/config")
 local buffer = import("micro/buffer")
 
-local fmt = import('fmt')
+local filepath = import("path/filepath")
+local os = import("os")
 
+local fmt = import('fmt')
 local OmniCursorHistory = {}
 local OmniCursorReverseFilePathMap = {}
 local OmniCursorFilePathMap = {}
@@ -124,6 +126,11 @@ function GoToHistoryEntry(bp, entry)
                 ", ", entry.CursorLoc.X, ", ", entry.CursorLoc.Y)
 
     local entryFilePath = OmniCursorFilePathMap[entry.FileId]
+
+    relPath, err = filepath.Rel(os.Getwd(), entryFilePath)
+    if err == nil and relPath ~= nil then
+        entryFilePath = relPath
+    end
 
     -- micro.Log("We have ", #micro.Tabs().List, " tabs")
     Common.HandleOpenFile(entryFilePath, bp, "1")
