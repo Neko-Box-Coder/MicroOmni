@@ -20,6 +20,14 @@ Self.OmniFzfCmd = config.GetGlobalOption("OmniFzfCmd")
 Self.OmniNewFileMethod = config.GetGlobalOption("OmniNewFileMethod")
 
 
+Self.OmniMinimapMaxIndent = config.GetGlobalOption("OmniMinimapMaxIndent")
+Self.OmniMinimapContextNumLines = config.GetGlobalOption("OmniMinimapContextNumLines")
+Self.OmniMinimapMinDistance = config.GetGlobalOption("OmniMinimapMinDistance")
+Self.OmniMinimapMaxColumns = config.GetGlobalOption("OmniMinimapMaxColumns")
+Self.OmniMinimapTargetNumLines = config.GetGlobalOption("OmniMinimapTargetNumLines")
+Self.OmniMinimapScrollContent = config.GetGlobalOption("OmniMinimapScrollContent")
+
+
 
 function Self.IsPathDir(path)
     -- Stat the file/dir path we created

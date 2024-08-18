@@ -17,7 +17,7 @@ local History = require("History")
 local WordJump = require("WordJump")
 local Highlight = require("Highlight")
 local Diff = require("Diff")
-
+local Minimap = require("Minimap")
 
 function LuaCopy(obj, seen)
     if type(obj) ~= 'table' then return obj end
@@ -31,6 +31,7 @@ end
 
 function preQuit(bp)
     Diff.CheckAndQuitDiffView(bp)
+    Minimap.CheckAndQuitMinimap(bp)
     return true
 end
 
@@ -41,6 +42,7 @@ function onAnyEvent()
         OmniCenter(bpToCenter)
     end
     History.RecordCursorHistory()
+    Minimap.UpdateMinimapView()
 end
 
 -- See issue https://github.com/zyedidia/micro/issues/3320
@@ -228,6 +230,62 @@ function InitializeSettings()
             Common.OmniHistoryLineDiff = 5
         end
     end
+    
+    if Common.OmniMinimapScrollContent == nil then
+        Common.OmniMinimapScrollContent = true
+    -- elseif Common.OmniMinimapScrollContent == "true" then
+    --     Common.OmniMinimapScrollContent = true
+    -- elseif Common.OmniMinimapScrollContent == "false" then
+    --     Common.OmniMinimapScrollContent = false
+    elseif Common.OmniMinimapScrollContent ~= true and Common.OmniMinimapScrollContent ~= false then
+        micro.Log("Invalid value for OmniMinimapScrollContent:", Common.OmniMinimapScrollContent)
+        micro.InfoBar():Error("Invalid value for OmniMinimapScrollContent:", Common.OmniMinimapScrollContent)
+    end
+
+    if Common.OmniMinimapMaxIndent == nil then
+        Common.OmniMinimapMaxIndent = 5
+    else
+        Common.OmniMinimapMaxIndent = tonumber(Common.OmniMinimapMaxIndent)
+        if Common.OmniMinimapMaxIndent == nil then
+            Common.OmniMinimapMaxIndent = 5
+        end
+    end
+
+    if Common.OmniMinimapContextNumLines == nil then
+        Common.OmniMinimapContextNumLines = 20
+    else
+        Common.OmniMinimapContextNumLines = tonumber(Common.OmniMinimapContextNumLines)
+        if Common.OmniMinimapContextNumLines == nil then
+            Common.OmniMinimapContextNumLines = 20
+        end
+    end
+    
+    if Common.OmniMinimapMinDistance == nil then
+        Common.OmniMinimapMinDistance = 20
+    else
+        Common.OmniMinimapMinDistance = tonumber(Common.OmniMinimapMinDistance)
+        if Common.OmniMinimapMinDistance == nil then
+            Common.OmniMinimapMinDistance = 20
+        end
+    end
+    
+    if Common.OmniMinimapMaxColumns == nil then
+        Common.OmniMinimapMaxColumns = 75
+    else
+        Common.OmniMinimapMaxColumns = tonumber(Common.OmniMinimapMaxColumns)
+        if Common.OmniMinimapMaxColumns == nil then
+            Common.OmniMinimapMaxColumns = 75
+        end
+    end
+    
+    if Common.OmniMinimapTargetNumLines == nil then
+        Common.OmniMinimapTargetNumLines = 100
+    else
+        Common.OmniMinimapTargetNumLines = tonumber(Common.OmniMinimapTargetNumLines)
+        if Common.OmniMinimapTargetNumLines == nil then
+            Common.OmniMinimapTargetNumLines = 100
+        end
+    end
 
     if Common.OmniContentArgs == nil or Common.OmniContentArgs == "" then
         Common.OmniContentArgs =
@@ -288,6 +346,8 @@ function init()
     config.MakeCommand("OmniNewTabLeft", OmniNewTabLeft, config.NoComplete)
 
     config.MakeCommand("OmniDiff", Diff.OmniDiff, config.NoComplete)
+    
+    config.MakeCommand("OmniMinimap", Minimap.OmniMinimap, config.NoComplete)
     
     config.MakeCommand("OmniTest", OmniTest, TestCompleter)
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)
