@@ -22,10 +22,8 @@ local OmniDiffDiffPanes = {}
 
 function createRuntimeFile(relativePath, data)
     local microOmniDir = config.ConfigDir.."/plug/MicroOmni/"
-    
     if not Common.path_exists(filepath.Dir(microOmniDir..relativePath)) then
         local err = os.MkdirAll(filepath.Dir(microOmniDir..relativePath), os.ModePerm)
-    
         if err ~= nil then
             micro.InfoBar():Error(  "Failed to create dir: ", filepath.Dir(microOmniDir..relativePath), 
                                     " with error ", err)
@@ -287,7 +285,7 @@ function OnDiffFinishCallback(resp, cancelled)
             plusFile = relPath
         end
         
-        local buf, err = buffer.NewBuffer(processedDiff, "diff")
+        local buf, err = buffer.NewBuffer(processedDiff, "diff"..#OmniDiffTargetPanes)
         if err ~= nil then 
             micro.InfoBar():Error(err)
             return
