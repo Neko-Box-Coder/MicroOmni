@@ -60,7 +60,7 @@ All of these are available for Unix and Windows
 >
 > [https://gnuwin32.sourceforge.net/packages/diffutils.htm](https://gnuwin32.sourceforge.net/packages/diffutils.htm)
 
-Alternatively, you can get all the required executables you need for Windows in [Release](https://github.com/Neko-Box-Coder/MicroOmni/releases)
+Alternatively, you can get all the required executables you need for Windows in [Release](https://github.com/Neko-Box-Coder/MicroOmni/releases/tag/v0.0.1)
 > [!NOTE]
 > On Windows, the directory that has the required executables must be added to the PATH environment variable
 
