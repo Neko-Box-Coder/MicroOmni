@@ -129,16 +129,6 @@ end
 
 
 function Self.OmniContent(bp)
-    if Common.OmniContentArgs == nil or Common.OmniContentArgs == "" then
-        Common.OmniContentArgs =   
-            "--bind 'alt-f:reload:rg -i -F -uu -n {q}' "..
-            "--delimiter : -i --reverse "..
-            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-            "alt-up:half-page-up,alt-down:half-page-down "..
-            "--preview-window 'down,+{2}-/2' "..
-            "--preview 'bat -f -n --highlight-line {2} {1}'"
-    end
-
     OmniSearchText = ""
     if bp.Cursor:HasSelection() then
         OmniSearchText = bp.Cursor:GetSelection()
@@ -155,16 +145,6 @@ end
 
 
 function Self.OmniLocalSearch(bp, args)
-    if Common.OmniLocalSearchArgs == nil or Common.OmniLocalSearchArgs == "" then
-        Common.OmniLocalSearchArgs =
-            "--bind 'start:reload:bat -n --decorations always {filePath}' "..
-            "-i --reverse "..
-            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-            "alt-up:half-page-up,alt-down:half-page-down "..
-            "--preview-window 'down,+{1}-/2' "..
-            "--preview 'bat -f -n --highlight-line {1} {filePath}'"
-    end
-
     local localSearchArgs = Common.OmniLocalSearchArgs:gsub("{filePath}", "\""..bp.buf.AbsPath.."\"")
 
     if bp.Cursor:HasSelection() then
@@ -186,15 +166,6 @@ end
 
 
 function Self.OmniGotoFile(bp)
-    if Common.OmniGotoFileArgs == nil or Common.OmniGotoFileArgs == "" then
-        Common.OmniGotoFileArgs = 
-            "-i --reverse "..
-            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-            "alt-up:half-page-up,alt-down:half-page-down "..
-            "--preview-window 'down' "..
-            "--preview 'bat -f -n {}'"
-    end
-
     local localGotoFileArgs = Common.OmniGotoFileArgs
     if bp.Cursor:HasSelection() then
         localGotoFileArgs = localGotoFileArgs.." -q '"..util.String(bp.Cursor:GetSelection()).."'"

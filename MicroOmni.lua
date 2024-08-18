@@ -218,6 +218,55 @@ function OmniNewTabLeft(bp)
     bp:TabMoveCmd({tostring(currentActiveIndex + 1)})
 end
 
+function InitializeSettings()
+    -- Convert history line diff to integer in the beginning
+    if Common.OmniHistoryLineDiff == nil or Common.OmniHistoryLineDiff == "" then
+        Common.OmniHistoryLineDiff = 5
+    else
+        Common.OmniHistoryLineDiff = tonumber(Common.OmniHistoryLineDiff)
+        if Common.OmniHistoryLineDiff == nil then
+            Common.OmniHistoryLineDiff = 5
+        end
+    end
+
+    if Common.OmniContentArgs == nil or Common.OmniContentArgs == "" then
+        Common.OmniContentArgs =
+            "--bind 'alt-f:reload:rg -i -F -uu -n {q}' "..
+            "--delimiter : -i --reverse "..
+            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+            "alt-up:half-page-up,alt-down:half-page-down "..
+            "--preview-window 'down,+{2}-/2' "..
+            "--preview 'bat -f -n --highlight-line {2} {1}'"
+    end
+
+    if Common.OmniGotoFileArgs == nil or Common.OmniGotoFileArgs == "" then
+        Common.OmniGotoFileArgs = 
+            "-i --reverse "..
+            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+            "alt-up:half-page-up,alt-down:half-page-down "..
+            "--preview-window 'down' "..
+            "--preview 'bat -f -n {}'"
+    end
+
+    if Common.OmniLocalSearchArgs == nil or Common.OmniLocalSearchArgs == "" then
+        Common.OmniLocalSearchArgs =
+            "--bind 'start:reload:bat -n --decorations always {filePath}' "..
+            "-i --reverse "..
+            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+            "alt-up:half-page-up,alt-down:half-page-down "..
+            "--preview-window 'down,+{1}-/2' "..
+            "--preview 'bat -f -n --highlight-line {1} {filePath}'"
+    end
+
+    if Common.OmniFzfCmd == nil then
+        Common.OmniFzfCmd = "fzf"
+    end
+
+    if Common.OmniNewFileMethod == nil then
+        Common.OmniNewFileMethod = "smart_newtab"
+    end
+end
+
 function init()
     config.MakeCommand("OmniGlobalSearch", Search.OmniContent, config.NoComplete)
     config.MakeCommand("OmniLocalSearch", Search.OmniLocalSearch, config.NoComplete)
@@ -239,29 +288,15 @@ function init()
     config.MakeCommand("OmniNewTabLeft", OmniNewTabLeft, config.NoComplete)
 
     config.MakeCommand("OmniDiff", Diff.OmniDiff, config.NoComplete)
-
-    -- Convert history line diff to integer in the beginning
-    if Common.OmniHistoryLineDiff == nil or Common.OmniHistoryLineDiff == "" then
-        Common.OmniHistoryLineDiff = 5
-    else
-        Common.OmniHistoryLineDiff = tonumber(Common.OmniHistoryLineDiff)
-        if Common.OmniHistoryLineDiff == nil then
-            Common.OmniHistoryLineDiff = 5
-        end
-    end
     
     config.MakeCommand("OmniTest", OmniTest, TestCompleter)
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)
     config.MakeCommand("OmniTest3", OmniTest3, config.NoComplete)
+    
+    -- Initialize settings
+    InitializeSettings()
 
-    if Common.OmniFzfCmd == nil then
-        Common.OmniFzfCmd = "fzf"
-    end
-
-    if Common.OmniNewFileMethod == nil then
-        Common.OmniNewFileMethod = "smart_newtab"
-    end
-
+    -- Check commands
     local missingCommands = {}
     if not CheckCommand(Common.OmniFzfCmd.." --version") then
         missingCommands[#missingCommands + 1] = "fzf"
