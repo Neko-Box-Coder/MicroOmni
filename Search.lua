@@ -18,14 +18,14 @@ local OmniSearchText = ""
 local Self = {}
 
 -- NOTE: lineNum is string
-function fzfParseOutput(output, bp, lineNum)
+function fzfParseOutput(output, bp, lineNum, gotoLineIfExists)
     micro.Log("fzfParseOutput called")
     if output ~= "" then
         local file = string.gsub(output, "[\n\r]", "")
         if file == nil then
             return
         end
-        Common.HandleOpenFile(file, bp, lineNum)
+        Common.HandleOpenFile(file, bp, lineNum, gotoLineIfExists)
     end
 end
 
@@ -107,7 +107,7 @@ function FindContent(str, searchLoc)
             path = OmniContentFindPath.."/"..path
         end
         
-        fzfParseOutput(path, bp, lineNumber)
+        fzfParseOutput(path, bp, lineNumber, true)
     end
 end
 
@@ -180,7 +180,7 @@ function Self.OmniGotoFile(bp)
         -- local path, lineNumber = output:match("^(.-):%s*(%d+):")
         
         -- micro.InfoBar():Message("Output is ", output, " and extracted lineNumber is ", lineNumber)
-        fzfParseOutput(output, bp, "1")
+        fzfParseOutput(output, bp, "1", false)
     end
 end
 

@@ -133,7 +133,7 @@ function GoToHistoryEntry(bp, entry)
     end
 
     -- micro.Log("We have ", #micro.Tabs().List, " tabs")
-    Common.HandleOpenFile(entryFilePath, bp, "1")
+    Common.HandleOpenFile(entryFilePath, bp, "1", true)
     micro.CurPane().Cursor:ResetSelection()
     micro.CurPane().Cursor:GotoLoc(Common.LocBoundCheck(micro.CurPane().Buf, entry.CursorLoc))
     micro.CurPane():Relocate()

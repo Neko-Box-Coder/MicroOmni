@@ -60,9 +60,9 @@ function Self.path_exists(path)
 end
 
 
-function Self.HandleOpenFile(path, bp, lineNum)
+function Self.HandleOpenFile(path, bp, lineNum, gotoLineIfExists)
     if Self.OmniNewFileMethod == "smart_newtab" then
-        Self.SmartNewTab(path, bp, lineNum)
+        Self.SmartNewTab(path, bp, lineNum, gotoLineIfExists)
         return
     end
 
@@ -87,7 +87,7 @@ function Self.HandleOpenFile(path, bp, lineNum)
 end
 
 -- NOTE: lineNum is string
-function Self.SmartNewTab(path, bp, lineNum)
+function Self.SmartNewTab(path, bp, lineNum, gotoLineIfExists)
     local cleanFilepath = filepath.Clean(path)
     
     -- If current pane is empty, we can open in it
@@ -118,8 +118,10 @@ function Self.SmartNewTab(path, bp, lineNum)
                 -- NOTE: SetActive functions has index starting at 0 instead lol
                 micro.Tabs():SetActive(i - 1)
                 micro.Tabs().List[i]:SetActive(j - 1)
-                currentPane.Cursor:ResetSelection()
-                currentPane:GotoCmd({lineNum})
+                if gotoLineIfExists then
+                    currentPane.Cursor:ResetSelection()
+                    currentPane:GotoCmd({lineNum})
+                end
                 -- currentPane:Relocate()
                 return
             end
