@@ -1,4 +1,4 @@
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 
 local micro = import("micro")
 local buffer = import("micro/buffer")
@@ -371,7 +371,7 @@ function init()
     end
     
     if not CheckCommand("diff -v") then
-        missingCommands[#missingCommands + 1] = "bat"
+        missingCommands[#missingCommands + 1] = "diff"
     end
 
     if #missingCommands ~= 0 then

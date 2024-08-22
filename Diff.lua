@@ -221,7 +221,7 @@ function OnDiffFinishCallback(resp, cancelled)
             minusFile = createdPath
         end
         
-        if micro.CurPane().Buf.ModifiedThisFrame then
+        if micro.CurPane().Buf:Modified() then
             local createdPath, success = 
                 createRuntimeFile("./temp/plus.temp", micro.CurPane().Buf:Bytes())
             if not success then
@@ -234,7 +234,7 @@ function OnDiffFinishCallback(resp, cancelled)
         plusFile = respPath
         
         -- Create temp files if needed
-        if micro.CurPane().Buf.ModifiedThisFrame then
+        if micro.CurPane().Buf:Modified() then
             micro.Log("A")
             local createdPath, success = 
                 createRuntimeFile("./temp/minus.temp", micro.CurPane().Buf:Bytes())
