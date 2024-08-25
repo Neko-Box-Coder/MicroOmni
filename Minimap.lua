@@ -297,15 +297,16 @@ function Self.OmniMinimap(bp)
     
     -- Output minimap
     local minimapBuf, err = buffer.NewBuffer(table.concat(outputLines, "\n"), "minimap"..#OmniMinimapTargetPanes)
-    minimapBuf.Type.Readonly = true
-    minimapBuf.Settings["ruler"] = false
     
     if err ~= nil then 
         micro.InfoBar():Error(err)
         return
     end
     
+    minimapBuf.Type.Readonly = true
+    minimapBuf:SetOptionNative("ruler", false)
     local minimapPane = micro.CurPane():VSplitIndex(minimapBuf, true)
+    
     table.insert(OmniMinimapTargetPanes, bp)
     table.insert(OmniMinimapPanes, minimapPane)
     table.insert(OmniMinimapRecords, minimapRecords)
