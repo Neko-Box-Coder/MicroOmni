@@ -6,8 +6,11 @@ local config = import("micro/config")
 local fmt = import('fmt')
 package.path = fmt.Sprintf('%s;%s/plug/MicroOmni/?.lua', package.path, config.ConfigDir)
 
+local Common = require("Common")
+
 local Self = {}
 
+local OmniFirstMultiCursorSpawned = false
 
 function OnTypingHighlight(msg)
     if micro.CurPane() == nil or micro.CurPane().Buf == nil then return end
@@ -91,5 +94,97 @@ function Self.OmniHighlightOnly(bp)
                             selectionText, "", OnTypingHighlight, OnSubmitHighlightFind)
 end
 
+
+function PerformMultiCursor(bp, forceMove)
+    -- Check highlight
+    if not bp.Buf.HighlightSearch or bp.Buf.LastSearch == "" then
+        bp:SpawnMultiCursor()
+        return
+    end
+    
+    local lastCursor = bp.Buf:GetCursor(bp.Buf:NumCursors() - 1)
+    local moveCursor = false
+    
+    if Common.OmniCanUseNewCursor then
+        moveCursor = not lastCursor:HasSelection()
+    else
+        moveCursor = ((bp.Buf:NumCursors() == 1 and not OmniFirstMultiCursorSpawned) and {true} or {false})[1]
+    end
+    
+    if forceMove then moveCursor = true end
+    
+    local searchStart = nil
+    
+    if moveCursor then
+        OmniFirstMultiCursorSpawned = true
+        local currentLoc = lastCursor.Loc
+        searchStart = buffer.Loc(currentLoc.X, currentLoc.Y)
+    else
+        OmniFirstMultiCursorSpawned = false
+        
+        if Common.OmniCanUseNewCursor then
+            searchStart = buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y)
+        else
+            searchStart = buffer.Loc(lastCursor.Loc.X, lastCursor.Loc.Y)
+        end
+    end
+    
+    local foundLocs, found, err = bp.Buf:FindNext(  bp.Buf.LastSearch, 
+                                                    bp.Buf:Start(), 
+                                                    bp.Buf:End(), 
+                                                    searchStart, 
+                                                    true,
+                                                    true)
+    
+    if found == false or err ~= nil then
+        micro.InfoBar():Message("No occurrences found")
+        return
+    end
+    
+    -- Spawn new cursor if we don't move the last cursor
+    if not moveCursor then
+        if Common.OmniCanUseNewCursor then
+            lastCursor = buffer.NewCursor(bp.Buf, buffer.Loc(0, 0))
+        else
+            if not bp:SpawnMultiCursorDown() then
+                if not bp:SpawnMultiCursorUp() then
+                    micro.InfoBar():Error("Failed to spawn cursor...")
+                    return
+                end
+            end
+            lastCursor = bp.Buf:GetCursor(bp.Buf:NumCursors() - 1)
+        end
+    end
+    
+    if Common.OmniCanUseNewCursor then
+        lastCursor:SetSelectionStart(foundLocs[1])
+        lastCursor:SetSelectionEnd(foundLocs[2])
+        lastCursor.OrigSelection[1].X = lastCursor.CurSelection[1].X
+        lastCursor.OrigSelection[1].Y = lastCursor.CurSelection[1].Y
+        lastCursor.OrigSelection[2].X = lastCursor.CurSelection[2].X
+        lastCursor.OrigSelection[2].Y = lastCursor.CurSelection[2].Y
+        lastCursor.Loc.X = lastCursor.CurSelection[2].X
+        lastCursor.Loc.Y = lastCursor.CurSelection[2].Y
+        if not moveCursor then
+            bp.Buf:AddCursor(lastCursor)
+        end
+    else
+        lastCursor.Loc.X = foundLocs[2].X
+        lastCursor.Loc.Y = foundLocs[2].Y
+    end
+    
+    bp.Buf:SetCurCursor(bp.Buf:NumCursors() - 1)
+    bp.Buf:MergeCursors()
+    bp:Relocate()
+end
+
+
+function Self.OmniSpawnCursorNextHighlight(bp)
+    PerformMultiCursor(bp, false)
+end
+
+function Self.OmniMoveLastCursorNextHighlight(bp)
+    PerformMultiCursor(bp, true)
+end
 
 return Self

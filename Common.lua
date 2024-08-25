@@ -13,6 +13,7 @@ Self.OmniLocalSearchArgs = config.GetGlobalOption("OmniLocalSearchArgs")
 Self.OmniGotoFileArgs = config.GetGlobalOption("OmniGotoFileArgs")
 Self.OmniSelectType = config.GetGlobalOption("OmniSelectType")
 Self.OmniHistoryLineDiff = config.GetGlobalOption("OmniHistoryLineDiff")
+Self.OmniCanUseNewCursor = config.GetGlobalOption("OmniCanUseNewCursor")
 
 -- TODO: Allow setting highlight to use regex or not
 

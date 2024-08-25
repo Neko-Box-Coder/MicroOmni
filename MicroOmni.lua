@@ -231,6 +231,8 @@ function InitializeSettings()
         end
     end
     
+    Common.OmniCanUseNewCursor = false
+    
     if Common.OmniMinimapScrollContent == nil then
         Common.OmniMinimapScrollContent = true
     -- elseif Common.OmniMinimapScrollContent == "true" then
@@ -340,6 +342,9 @@ function init()
     config.MakeCommand("OmniCopyAbsolutePath", OmniCopyAbsolutePath, config.NoComplete)
 
     config.MakeCommand("OmniHighlightOnly", Highlight.OmniHighlightOnly, config.NoComplete)
+    config.MakeCommand("OmniSpawnCursorNextHighlight", Highlight.OmniSpawnCursorNextHighlight, config.NoComplete)
+    config.MakeCommand("OmniMoveLastCursorNextHighlight", Highlight.OmniMoveLastCursorNextHighlight, config.NoComplete)
+    
     config.MakeCommand("OmniJump", WordJump.OmniJump, config.NoComplete)
     
     config.MakeCommand("OmniNewTabRight", OmniNewTabRight, config.NoComplete)
