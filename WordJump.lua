@@ -14,6 +14,10 @@ local Common = require("Common")
 local Self = {}
 
 local OmniOriginalSearchIgnoreCase = false
+local OmniOriginalLastSearch = ""
+local OmniOriginalLastSearchRegex = true
+local OmniOriginalHighlightSearch = true
+
 local OmniJumpWordsRecords = {}
 local OmniOriginalWordsRecords = {}
 
@@ -218,9 +222,13 @@ end
 function OnWordJump(msg, cancelled)
     RestoreOriginalWords(OmniOriginalWordsRecords, nil)
     local bp = micro.CurPane()
+    
+    -- Restore the original search settings
     bp.Buf.Settings["ignorecase"] = OmniOriginalSearchIgnoreCase
-    bp.Buf.LastSearch = ""
-    bp.Buf.HighlightSearch = false
+    bp.Buf.LastSearch = OmniOriginalLastSearch
+    bp.Buf.LastSearchRegex = OmniOriginalLastSearchRegex
+    bp.Buf.HighlightSearch = OmniOriginalHighlightSearch
+    
     if string.len(msg) ~= 2 or cancelled then
         return
     end
@@ -239,7 +247,12 @@ function Self.OmniJump(bp)
     bp.Buf:ClearCursors()
     
     AssignJumpWordsToView(msg)
+    
+    -- Store the original search related settings
     OmniOriginalSearchIgnoreCase = bp.Buf.Settings["ignorecase"]
+    OmniOriginalLastSearch = bp.Buf.LastSearch
+    OmniOriginalLastSearchRegex = bp.Buf.LastSearchRegex
+    OmniOriginalHighlightSearch = bp.Buf.HighlightSearch
     
     -- NOTE:    Syntax highlighting could be used instead of search highlight using UpdateRules.
     --          But would require me to use cursor to modify the buffer instead of modifying bytes.
