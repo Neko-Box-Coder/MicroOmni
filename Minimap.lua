@@ -48,6 +48,17 @@ function RemoveMinimapIfExist(targetBp)
             return true
         end
     end
+    
+    for i, val in ipairs(OmniMinimapPanes) do
+        if targetBp == val then
+            OmniMinimapPanes[i]:Quit()
+            table.remove(OmniMinimapTargetPanes, i)
+            table.remove(OmniMinimapPanes, i)
+            table.remove(OmniMinimapRecords, i)
+            return true
+        end
+    end
+    
     return false
 end
 
