@@ -62,6 +62,15 @@ end
 
 
 function Self.HandleOpenFile(path, bp, lineNum, gotoLineIfExists)
+    -- Turn to relative path if possible
+    local wd, err = os.Getwd()
+    if err == nil then
+        local relPath, err = filepath.Rel(wd, path)
+        if err == nil and relPath ~= nil then
+            path = relPath
+        end
+    end
+    
     if Self.OmniNewFileMethod == "smart_newtab" then
         Self.SmartNewTab(path, bp, lineNum, gotoLineIfExists)
         return
@@ -87,20 +96,9 @@ function Self.HandleOpenFile(path, bp, lineNum, gotoLineIfExists)
     micro.CurPane():GotoCmd({lineNum})
 end
 
--- NOTE: lineNum is string
-function Self.SmartNewTab(path, bp, lineNum, gotoLineIfExists)
+function Self.OpenPaneIfExist(path)
     local cleanFilepath = filepath.Clean(path)
-    
-    -- If current pane is empty, we can open in it
-    if not Self.path_exists(micro.CurPane().Buf.AbsPath) or Self.IsPathDir(micro.CurPane().Buf.AbsPath) then
-        if #micro.CurPane().Buf:Bytes() == 0 then
-            bp:OpenCmd({cleanFilepath})
-            micro.CurPane():GotoCmd({lineNum})
-            return
-        end
-    end
-
-    -- Otherwise find if there's any existing panes
+    local wd, wdErr = os.Getwd()
     for i = 1, #micro.Tabs().List do
         for j = 1, #micro.Tabs().List[i].Panes do
             local currentPane = micro.Tabs().List[i].Panes[j]
@@ -112,22 +110,56 @@ function Self.SmartNewTab(path, bp, lineNum, gotoLineIfExists)
             --     micro.Log("currentBuf.Path:", currentBuf.Path)
             -- end
             
-            if  currentBuf ~= nil and 
-                (filepath.Clean(currentBuf.AbsPath) == cleanFilepath or 
-                filepath.Clean(currentBuf.Path) == cleanFilepath) then
-
-                -- NOTE: SetActive functions has index starting at 0 instead lol
-                micro.Tabs():SetActive(i - 1)
-                micro.Tabs().List[i]:SetActive(j - 1)
-                if gotoLineIfExists then
-                    currentPane.Cursor:ResetSelection()
-                    currentPane:GotoCmd({lineNum})
+            if currentBuf ~= nil and currentBuf.AbsPath ~= "" and currentBuf.AbsPath ~= nil then
+                local calculatedAbsPath = filepath.Abs(cleanFilepath)
+                if not filepath.IsAbs(cleanFilepath) and wdErr == nil then
+                    local absPath, absErr = filepath.Abs(filepath.Join(wd, cleanFilepath))
+                    -- micro.Log("absPath:", absPath)
+                    if absErr == nil then
+                        calculatedAbsPath = absPath
+                    end
                 end
-                -- currentPane:Relocate()
-                return
+                -- micro.Log("calculatedAbsPath:", calculatedAbsPath)
+                
+                if  filepath.Clean(currentBuf.AbsPath) == calculatedAbsPath or
+                    filepath.Clean(currentBuf.AbsPath) == cleanFilepath or 
+                    filepath.Clean(currentBuf.Path) == cleanFilepath then
+
+                    -- NOTE: SetActive functions has index starting at 0 instead lol
+                    micro.Tabs():SetActive(i - 1)
+                    micro.Tabs().List[i]:SetActive(j - 1)
+                    return true
+                end
             end
         end
     end
+    
+    return false
+end
+
+-- NOTE: lineNum is string
+function Self.SmartNewTab(path, bp, lineNum, gotoLineIfExists)
+    local cleanFilepath = filepath.Clean(path)
+    -- micro.Log("cleanFilepath:", cleanFilepath)
+    
+    -- If current pane is empty, we can open in it
+    if not Self.path_exists(micro.CurPane().Buf.AbsPath) or Self.IsPathDir(micro.CurPane().Buf.AbsPath) then
+        if #micro.CurPane().Buf:Bytes() == 0 then
+            bp:OpenCmd({cleanFilepath})
+            micro.CurPane():GotoCmd({lineNum})
+            return
+        end
+    end
+
+    -- Otherwise find if there's any existing panes
+    if Self.OpenPaneIfExist(cleanFilepath) then
+        if gotoLineIfExists then
+            currentPane.Cursor:ResetSelection()
+            currentPane:GotoCmd({lineNum})
+        end
+        return
+    end
+    -- currentPane:Relocate()
     
     -- If not just open it
     local currentActiveIndex = micro.Tabs():Active()

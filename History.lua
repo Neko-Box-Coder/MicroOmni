@@ -1,3 +1,5 @@
+-- TODO: Increase the line diff if we are not at the latest history
+
 local micro = import("micro")
 local config = import("micro/config")
 local buffer = import("micro/buffer")
@@ -127,13 +129,22 @@ function GoToHistoryEntry(bp, entry)
 
     local entryFilePath = OmniCursorFilePathMap[entry.FileId]
 
-    relPath, err = filepath.Rel(os.Getwd(), entryFilePath)
-    if err == nil and relPath ~= nil then
-        entryFilePath = relPath
+    -- micro.Log("os.Getwd():", os.Getwd())
+    local wd, err = os.Getwd()
+    if err == nil then
+        local relPath, err = filepath.Rel(wd, entryFilePath)
+        if err == nil and relPath ~= nil then
+            entryFilePath = relPath
+        end
     end
 
+    micro.Log("entryFilePath:", entryFilePath)
+
     -- micro.Log("We have ", #micro.Tabs().List, " tabs")
-    Common.HandleOpenFile(entryFilePath, bp, "1", true)
+    if not Common.OpenPaneIfExist(entryFilePath) then
+        Common.HandleOpenFile(entryFilePath, bp, "1", false)
+    end
+    
     micro.CurPane().Cursor:ResetSelection()
     micro.CurPane().Cursor:GotoLoc(Common.LocBoundCheck(micro.CurPane().Buf, entry.CursorLoc))
     micro.CurPane():Relocate()
