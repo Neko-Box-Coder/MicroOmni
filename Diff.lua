@@ -291,10 +291,15 @@ function OnDiffFinishCallback(resp, cancelled)
             return
         end
         
+        local bp = micro.CurPane()
+        
         local diffPane = micro.CurPane():VSplitIndex(buf, not OmniDiffPlusFile)
         table.insert(OmniDiffTargetPanes, curPane)
         table.insert(OmniDiffDiffPanes, diffPane)
         micro.CurPane():SetLocalCmd({"filetype", "patch"})
+        
+        -- Set focus back so that it is not scroll to top
+        bp:Tab():SetActive(bp:Tab():GetPane(bp:ID()))
     else
         micro.InfoBar():Error(err)
     end
