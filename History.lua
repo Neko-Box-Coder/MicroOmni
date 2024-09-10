@@ -122,7 +122,7 @@ function Self.RecordCursorHistory()
 end
 
 
-function GoToHistoryEntry(bp, entry)
+local function GoToHistoryEntry(bp, entry)
     micro.Log("GoToHistoryEntry called")
     micro.Log(  "Goto Entry: ", OmniCursorFilePathMap[entry.FileId], 
                 ", ", entry.CursorLoc.X, ", ", entry.CursorLoc.Y)
@@ -132,8 +132,8 @@ function GoToHistoryEntry(bp, entry)
     -- micro.Log("os.Getwd():", os.Getwd())
     local wd, err = os.Getwd()
     if err == nil then
-        local relPath, err = filepath.Rel(wd, entryFilePath)
-        if err == nil and relPath ~= nil then
+        local relPath, relErr = filepath.Rel(wd, entryFilePath)
+        if relErr == nil and relPath ~= nil then
             entryFilePath = relPath
         end
     end

@@ -14,7 +14,7 @@ local OmniMinimapPanes = {}
 local OmniMinimapRecords = {}
 
 
-function GetIndentLevel(str, tabSize)
+local function GetIndentLevel(str, tabSize)
     local indentLevel = 0
     local continuousSpace = 0
     local nonWhiteSpaceChar = nil
@@ -38,7 +38,7 @@ function GetIndentLevel(str, tabSize)
     return indentLevel, nonWhiteSpaceChar
 end
 
-function RemoveMinimapIfExist(targetBp)
+local function RemoveMinimapIfExist(targetBp)
     for i, val in ipairs(OmniMinimapTargetPanes) do
         if targetBp == val then
             OmniMinimapPanes[i]:Quit()
@@ -146,18 +146,15 @@ function Self.OmniMinimap(bp)
     local minimapMaxLines = Common.OmniMinimapTargetNumLines
     local indentBudget = {}
     local firstIndent = -1
-    local maxIndent = indentCutoff
     
     for i = 0, indentCutoff do
         if indentCount[i] ~= nil and indentCount[i] ~= 0 then
             if indentCount[i] > minimapMaxLines and firstIndent == -1 then
                 indentBudget[i] = indentCount[i]
-                maxIndent = i
                 break
             else
                 if indentCount[i] > minimapMaxLines then
                     indentBudget[i] = minimapMaxLines
-                    maxIndent = i
                     break
                 else
                     indentBudget[i] = indentCount[i]
@@ -168,7 +165,6 @@ function Self.OmniMinimap(bp)
             if firstIndent == -1 then
                 firstIndent = i
             end
-            maxIndent = i
         end
     end
     
@@ -266,7 +262,10 @@ function Self.OmniMinimap(bp)
             -- micro.Log("currentLineStr[", curLineNum, "]:", currentLineStr)
             -- currentLineStr = string.gsub(currentLineStr, "[\n\r]", "")
             if #currentLineStr > minimapShowLength then
-                table.insert(outputLines, string.format("%-5d %s", curLineNum, currentLineStr:sub(1, minimapShowLength).."..."))
+                table.insert(   outputLines, 
+                                string.format(  "%-5d %s", 
+                                                curLineNum, 
+                                                currentLineStr:sub(1, minimapShowLength).."..."))
             else
                 table.insert(outputLines, string.format("%-5d %s", curLineNum, currentLineStr))
             end

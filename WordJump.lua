@@ -21,7 +21,7 @@ local OmniOriginalHighlightSearch = true
 local OmniJumpWordsRecords = {}
 local OmniOriginalWordsRecords = {}
 
-function AssignJumpWords(majorChars, minorChars, rowIndexStart, rowIndexEnd, currentJumpChar)
+local function AssignJumpWords(majorChars, minorChars, rowIndexStart, rowIndexEnd, currentJumpChar)
     micro.Log("rowIndexStart:", rowIndexStart)
     micro.Log("rowIndexEnd:", rowIndexEnd)
     micro.Log("string.len(majorChars):", string.len(majorChars))
@@ -56,7 +56,7 @@ function AssignJumpWords(majorChars, minorChars, rowIndexStart, rowIndexEnd, cur
                 table.insert(runeBuffer, currentLineBytes[k])
             end
             
-            local rune, size = utf8.DecodeRune(runeBuffer)
+            local _, size = utf8.DecodeRune(runeBuffer)
             runeBuffer = {}
             for k = j, j + size - 1 do
                 table.insert(runeBuffer, currentLineBytes[k])
@@ -118,7 +118,7 @@ function AssignJumpWords(majorChars, minorChars, rowIndexStart, rowIndexEnd, cur
     return rcToOriWord, jumpWordToRc
 end
 
-function AssignJumpWordsToView(msg)
+local function AssignJumpWordsToView(msg)
     local bp = micro.CurPane()
     local view = bp:GetView()
     local numberOfLines = bp.Buf:LinesNum()
@@ -178,7 +178,7 @@ function AssignJumpWordsToView(msg)
     -- bp.Buf:UpdateRules()
 end
 
-function RestoreOriginalWords(rcToOriWord, exclusionRow)
+local function RestoreOriginalWords(rcToOriWord, exclusionRow)
     local bp = micro.CurPane()
     for row, rowValues in pairs(rcToOriWord) do
         if exclusionRow == nil or row ~= exclusionRow then
@@ -191,7 +191,7 @@ function RestoreOriginalWords(rcToOriWord, exclusionRow)
     end
 end
 
-function OnTypingJump(msg)
+local function OnTypingJump(msg)
     local bp = micro.CurPane()
 
     if string.len(msg) > 2 then
@@ -219,7 +219,7 @@ function OnTypingJump(msg)
 
 end
 
-function OnWordJump(msg, cancelled)
+local function OnWordJump(msg, cancelled)
     RestoreOriginalWords(OmniOriginalWordsRecords, nil)
     local bp = micro.CurPane()
     
@@ -246,7 +246,7 @@ function Self.OmniJump(bp)
     bp.Cursor:ResetSelection()
     bp.Buf:ClearCursors()
     
-    AssignJumpWordsToView(msg)
+    AssignJumpWordsToView("")
     
     -- Store the original search related settings
     OmniOriginalSearchIgnoreCase = bp.Buf.Settings["ignorecase"]

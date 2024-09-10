@@ -1,11 +1,13 @@
-VERSION = "0.2.2"
+VERSION = "0.2.3"
+
+-- luacheck . --globals import VERSION preQuit onAnyEvent init --ignore 212 542 611 612 613 614
 
 local micro = import("micro")
 local buffer = import("micro/buffer")
 local shell = import("micro/shell")
 local util = import("micro/util")
 local strings = import("strings")
-local os = import("os")
+-- local os = import("os")
 
 local config = import("micro/config")
 local fmt = import('fmt')
@@ -19,35 +21,9 @@ local Highlight = require("Highlight")
 local Diff = require("Diff")
 local Minimap = require("Minimap")
 
-function LuaCopy(obj, seen)
-    if type(obj) ~= 'table' then return obj end
-    if seen and seen[obj] then return seen[obj] end
-    local s = seen or {}
-    local res = setmetatable({}, getmetatable(obj))
-    s[obj] = res
-    for k, v in pairs(obj) do res[copy(k, s)] = copy(v, s) end
-    return res
-end
-
-function preQuit(bp)
-    Diff.CheckAndQuitDiffView(bp)
-    Minimap.CheckAndQuitMinimap(bp)
-    return true
-end
-
-function onAnyEvent()
-    micro.Log("onAnyEvent called")
-    local bpToCenter = Diff.UpdateDiffView()
-    if bpToCenter ~= nil then
-        OmniCenter(bpToCenter)
-    end
-    History.RecordCursorHistory()
-    Minimap.UpdateMinimapView()
-end
-
 -- See issue https://github.com/zyedidia/micro/issues/3320
 -- Modified from https://github.com/kaarrot/microgrep/blob/e1a32e8b95397a40e5dda0fb43e7f8d17469b88c/microgrep.lua#L118
-function WriteToClipboardWorkaround(content)
+local function WriteToClipboardWorkaround(content)
     if micro.CurPane() == nil then return end
 
     local curTab = micro.CurPane():Tab()
@@ -57,7 +33,7 @@ function WriteToClipboardWorkaround(content)
     -- Split pane in half and add some text
     micro.CurPane():HSplitAction()
     
-    local buf,err = buffer.NewBuffer(content, "")
+    local buf, _ = buffer.NewBuffer(content, "")
     -- Workaround to copy path to clioboard
     micro.CurPane():OpenBuffer(buf)
     micro.CurPane():SelectAll()
@@ -67,18 +43,17 @@ function WriteToClipboardWorkaround(content)
     curTab:SetActive(curPaneIndex)
 end
 
-function CheckCommand(command)
+local function CheckCommand(command)
     local _, error = shell.RunCommand(command)
     if error ~= nil then return false end
     return true
 end
 
-function OmniSelect(bp, args)
+local function OmniSelect(bp, args)
     if #args < 1 then return end
 
     local buf = bp.Buf
     local cursor = buf:GetActiveCursor()
-    local currentLoc = cursor.Loc
     local targetLine = cursor.Loc.Y
 
     if Common.OmniSelectType == nil or Common.OmniSelectType == "" then
@@ -114,7 +89,7 @@ end
 
 
 
-function OmniCopyRelativePath(bp)
+local function OmniCopyRelativePath(bp)
     if bp.Buf == nil then return end
 
     -- clipboard.Write(bp.Buf.Path, clipboard.ClipboardReg)
@@ -122,7 +97,7 @@ function OmniCopyRelativePath(bp)
     micro.InfoBar():Message(bp.Buf.Path, " copied into clipboard")
 end
 
-function OmniCopyAbsolutePath(bp)
+local function OmniCopyAbsolutePath(bp)
     if bp.Buf == nil then return end
     
     -- clipboard.Write(bp.Buf.AbsPath, clipboard.ClipboardReg)
@@ -130,9 +105,8 @@ function OmniCopyAbsolutePath(bp)
     micro.InfoBar():Message(bp.Buf.AbsPath, " copied into clipboard")
 end
 
-function OmniCenter(bp)
+local function OmniCenter(bp)
     local view = bp:GetView()
-    local oriX = bp.Cursor.Loc.X
     bp.Cursor:ResetSelection()
     bp.Buf:ClearCursors()
     local targetLineY = view.StartLine.Line + view.Height / 2
@@ -140,7 +114,7 @@ function OmniCenter(bp)
 end
 
 -- Testing auto complete for commands
-function TestCompleter(buf)
+local function TestCompleter(buf)
     local activeCursor = buf:GetActiveCursor()
     local input, argstart = buf:GetArg()
     -- micro.Log("input:", input)
@@ -165,7 +139,7 @@ function TestCompleter(buf)
     -- sort.Strings(suggestions)
     table.sort(suggestions, function(a, b) return a:upper() < b:upper() end)
     -- completions := make([]string, len(suggestions))
-    completions = {}
+    local completions = {}
     for _, suggestion in ipairs(suggestions) do
         local offset = activeCursor.X - argstart
         table.insert(completions, string.sub(suggestion, offset + 1, string.len(suggestion)))
@@ -174,23 +148,23 @@ function TestCompleter(buf)
     -- return {"test", "test2"}, {"test", "test A"}
 end
 
-function OmniTest(bp, args)
+local function OmniTest(bp, args)
     -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", TestECB, TestDoneCB)
     bp:CdCmd(args)
 end
 
-function TestDoneCB(msg, cancelled)
+local function TestDoneCB(msg, cancelled)
     -- git diff --output=test.diff -U5 --no-color ".\DefaultUserConfig.yaml" ".\DefaultUserConfig - Copy.yaml"
     local output, err = shell.RunInteractiveShell(msg, false, true)
     if err == nil or err:Error() == "exit status 1" then
-        OmniNewTabRight(micro.CurPane())
+        -- OmniNewTabRight(micro.CurPane())
         micro.CurPane().Buf:Insert(buffer.Loc(0, 0), output)
     else
         micro.InfoBar():Error(err)
     end
 end
 
-function OmniTest2(bp, args)
+local function OmniTest2(bp, args)
     -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", TestECB, TestDoneCB)
     -- local wd = os.Getwd()
     -- micro.InfoBar():Message("Getwd: ", wd)
@@ -202,25 +176,25 @@ function OmniTest2(bp, args)
     -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", nil, OnWordJump)
 end
 
-function OmniTest3(bp, args)
+local function OmniTest3(bp, args)
     -- micro.InfoBar():Prompt("Test prompt", "Test Message", "Test", TestECB, TestDoneCB)
     -- local wd = os.Getwd()
     -- local path = bp.buf.AbsPath
 end
 
-function OmniNewTabRight(bp)
+local function OmniNewTabRight(bp)
     local currentActiveIndex = micro.Tabs():Active()
     bp:NewTabCmd({})
     bp:TabMoveCmd({tostring(currentActiveIndex + 2)})
 end
 
-function OmniNewTabLeft(bp)
+local function OmniNewTabLeft(bp)
     local currentActiveIndex = micro.Tabs():Active()
     bp:NewTabCmd({})
     bp:TabMoveCmd({tostring(currentActiveIndex + 1)})
 end
 
-function InitializeSettings()
+local function InitializeSettings()
     -- Convert history line diff to integer in the beginning
     if Common.OmniHistoryLineDiff == nil or Common.OmniHistoryLineDiff == "" then
         Common.OmniHistoryLineDiff = 5
@@ -325,6 +299,22 @@ function InitializeSettings()
     if Common.OmniNewFileMethod == nil then
         Common.OmniNewFileMethod = "smart_newtab"
     end
+end
+
+function preQuit(bp)
+    Diff.CheckAndQuitDiffView(bp)
+    Minimap.CheckAndQuitMinimap(bp)
+    return true
+end
+
+function onAnyEvent()
+    micro.Log("onAnyEvent called")
+    local bpToCenter = Diff.UpdateDiffView()
+    if bpToCenter ~= nil then
+        OmniCenter(bpToCenter)
+    end
+    History.RecordCursorHistory()
+    Minimap.UpdateMinimapView()
 end
 
 function init()

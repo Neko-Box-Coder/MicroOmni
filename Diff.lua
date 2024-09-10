@@ -20,7 +20,7 @@ local OmniDiffTargetPanes = {}
 local OmniDiffDiffPanes = {}
 
 
-function createRuntimeFile(relativePath, data)
+local function createRuntimeFile(relativePath, data)
     local microOmniDir = config.ConfigDir.."/plug/MicroOmni/"
     if not Common.path_exists(filepath.Dir(microOmniDir..relativePath)) then
         local err = os.MkdirAll(filepath.Dir(microOmniDir..relativePath), os.ModePerm)
@@ -42,7 +42,7 @@ function createRuntimeFile(relativePath, data)
     return microOmniDir..relativePath, true
 end
 
-function processDiffOutput(output)
+local function processDiffOutput(output)
     local outputLines = {}
     local currentLineIndex = 1
     
@@ -102,7 +102,6 @@ function processDiffOutput(output)
     
     -- Populate the return lines
     local returnLines = {}
-    currentLineIndex = firstDiffIndex
     for i = firstDiffIndex, outputLinesCount do
         local curLine
         if outputLines[i] ~= nil then
@@ -144,7 +143,7 @@ function processDiffOutput(output)
     return table.concat(returnLines, "\n")
 end
 
-function OnDiffFinishCallback(resp, cancelled)
+local function OnDiffFinishCallback(resp, cancelled)
     if cancelled then
         return
     end
@@ -275,19 +274,10 @@ function OnDiffFinishCallback(resp, cancelled)
     micro.Log("processedDiff: ", processedDiff)
     if err == nil or err:Error() == "exit status 1" or err:Error() == "exit status 2" then
         local curPane = micro.CurPane()
-        local relPath, err = filepath.Rel(os.Getwd(), minusFile)
-        if err == nil and relPath ~= nil then
-            minusFile = relPath
-        end
         
-        relPath, err = filepath.Rel(os.Getwd(), plusFile)
-        if err == nil and relPath ~= nil then
-            plusFile = relPath
-        end
-        
-        local buf, err = buffer.NewBuffer(processedDiff, "diff"..#OmniDiffTargetPanes)
-        if err ~= nil then 
-            micro.InfoBar():Error(err)
+        local buf, bufErr = buffer.NewBuffer(processedDiff, "diff"..#OmniDiffTargetPanes)
+        if bufErr ~= nil then 
+            micro.InfoBar():Error(bufErr)
             return
         end
         
@@ -355,7 +345,7 @@ function Self.UpdateDiffView()
 end
 
 
-function OnDiffPlusCallback(yes, cancelled)
+local function OnDiffPlusCallback(yes, cancelled)
     if cancelled then
         return
     end

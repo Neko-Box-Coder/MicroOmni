@@ -65,8 +65,8 @@ function Self.HandleOpenFile(path, bp, lineNum, gotoLineIfExists)
     -- Turn to relative path if possible
     local wd, err = os.Getwd()
     if err == nil then
-        local relPath, err = filepath.Rel(wd, path)
-        if err == nil and relPath ~= nil then
+        local relPath, relErr = filepath.Rel(wd, path)
+        if relErr == nil and relPath ~= nil then
             path = relPath
         end
     end
@@ -79,8 +79,8 @@ function Self.HandleOpenFile(path, bp, lineNum, gotoLineIfExists)
     if Self.OmniNewFileMethod == "newtab" then
        bp:NewTabCmd({path})
     else
-        local buf, err = buffer.NewBufferFromFile(path)
-        if err ~= nil then return end
+        local buf, bufErr = buffer.NewBufferFromFile(path)
+        if bufErr ~= nil then return end
         
         if Self.OmniNewFileMethod == "vsplit" then
             bp:VSplitIndex(buf, true)
@@ -154,8 +154,8 @@ function Self.SmartNewTab(path, bp, lineNum, gotoLineIfExists)
     -- Otherwise find if there's any existing panes
     if Self.OpenPaneIfExist(cleanFilepath) then
         if gotoLineIfExists then
-            currentPane.Cursor:ResetSelection()
-            currentPane:GotoCmd({lineNum})
+            micro.CurPane().Cursor:ResetSelection()
+            micro.CurPane():GotoCmd({lineNum})
         end
         return
     end

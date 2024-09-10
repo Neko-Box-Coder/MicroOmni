@@ -18,7 +18,7 @@ local OmniSearchText = ""
 local Self = {}
 
 -- NOTE: lineNum is string
-function fzfParseOutput(output, bp, lineNum, gotoLineIfExists)
+local function fzfParseOutput(output, bp, lineNum, gotoLineIfExists)
     micro.Log("fzfParseOutput called")
     if output ~= "" then
         local file = string.gsub(output, "[\n\r]", "")
@@ -29,7 +29,7 @@ function fzfParseOutput(output, bp, lineNum, gotoLineIfExists)
     end
 end
 
-function getOS()
+local function getOS()
     if runtime.GOOS == "windows" then
         return "Windows"
     else
@@ -37,15 +37,15 @@ function getOS()
     end
 end
 
-function FindContent(str, searchLoc)
+local function FindContent(str, searchLoc)
     micro.Log("Find Content called")
     local bp = micro.CurPane()
     local selectedText = str
-    local fzfArgs = ""
+    local fzfArgs
     -- micro.Log("selectedText before: ", selectedText)
     -- micro.Log("Common.OmniContentArgs before: ", common.OmniContentArgs)
 
-    local firstWord, otherWords = selectedText:match("^(.[^%s]*)%s-(.*)$")
+    local firstWord, _ = selectedText:match("^(.[^%s]*)%s-(.*)$")
 
     if firstWord == nil or firstWord == "" then
         micro.InfoBar():Error("Failed to extract first word... str: ", str)
@@ -111,13 +111,13 @@ function FindContent(str, searchLoc)
     end
 end
 
-function OnFindPromptDone(resp, cancelled)
+local function OnFindPromptDone(resp, cancelled)
     if cancelled then return end
     FindContent(resp, OmniContentFindPath)
     return
 end
 
-function OnSearchDirSetDone(resp, cancelled)
+local function OnSearchDirSetDone(resp, cancelled)
     if cancelled then return end
 
     local bp = micro.CurPane()

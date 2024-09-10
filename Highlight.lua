@@ -12,7 +12,7 @@ local Self = {}
 
 local OmniFirstMultiCursorSpawned = false
 
-function OnTypingHighlight(msg)
+local function OnTypingHighlight(msg)
     if micro.CurPane() == nil or micro.CurPane().Buf == nil then return end
 
     local bp = micro.CurPane()
@@ -21,7 +21,7 @@ function OnTypingHighlight(msg)
     bp.Buf.HighlightSearch = true
 end
 
-function OnSubmitHighlightFind(msg, cancelled)
+local function OnSubmitHighlightFind(msg, cancelled)
     if micro.CurPane() == nil or micro.CurPane().Buf == nil or msg == nil or msg == "" then return end
 
     local bp = micro.CurPane()
@@ -95,7 +95,7 @@ function Self.OmniHighlightOnly(bp)
 end
 
 
-function PerformMultiCursor(bp, forceMove)
+local function PerformMultiCursor(bp, forceMove)
     -- Check highlight
     if not bp.Buf.HighlightSearch or bp.Buf.LastSearch == "" then
         bp:SpawnMultiCursor()
@@ -117,8 +117,11 @@ function PerformMultiCursor(bp, forceMove)
     
     if moveCursor then
         OmniFirstMultiCursorSpawned = true
+        bp:Deselect()
         local currentLoc = lastCursor.Loc
-        searchStart = buffer.Loc(currentLoc.X, currentLoc.Y)
+        -- searchStart = bp.Buf, buffer.Loc(currentLoc.X, currentLoc.Y)
+        searchStart = Common.LocBoundCheck(bp.Buf, buffer.Loc(currentLoc.X, currentLoc.Y - 1))
+        -- bp.Cursor:Deselect(false)
     else
         OmniFirstMultiCursorSpawned = false
         
