@@ -127,8 +127,10 @@ local function processDiffOutput(output)
                     table.insert(returnLines, "")
                 end
                 
-                -- Add diff header if possible
-                if #returnLines <= targetLineIndex - 2 then
+                -- Add diff header
+                if #returnLines == targetLineIndex - 1 then
+                    returnLines[#returnLines] = curLine
+                elseif #returnLines == targetLineIndex - 2 then
                     table.insert(returnLines, curLine)
                     -- micro.Log("Appending diff header")
                 end
