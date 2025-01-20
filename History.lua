@@ -1,5 +1,3 @@
--- TODO: Increase the line diff if we are not at the latest history
-
 local micro = import("micro")
 local config = import("micro/config")
 local buffer = import("micro/buffer")
@@ -72,9 +70,22 @@ function Self.RecordCursorHistory()
     local currentHistory = OmniCursorHistory[OmniCursorIndices.CurrentIndex]
 
     -- If difference is too less, then just leave it
+    local lineDiff = Common.OmniHistoryLineDiff
+    local timeTravelling = false
+    if OmniCursorIndices.CurrentIndex < OmniCursorIndices.EndIndex then
+        lineDiff = lineDiff * Common.OmniHistoryTimeTravelMulti
+        timeTravelling = true
+    end
+    
     if  currentHistory.FileId == OmniCursorReverseFilePathMap[bufPath] and 
-        math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y) < Common.OmniHistoryLineDiff then
+        math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y) < lineDiff then
 
+        if timeTravelling then
+            micro.InfoBar():Message("Cursor time travel (anchor lines ", 
+                                    math.max(currentHistory.CursorLoc.Y-lineDiff+1, 1), "-", 
+                                    currentHistory.CursorLoc.Y+lineDiff+1,"): ", 
+                                    OmniCursorIndices.CurrentIndex, "/", OmniCursorIndices.EndIndex)
+        end
         -- Just update X if on the same line
         if currentHistory.CursorLoc.Y == currentCursorLoc.Y then
             -- micro.Log("currentHistory.CursorLoc.X: ", currentHistory.CursorLoc.X)
@@ -83,6 +94,10 @@ function Self.RecordCursorHistory()
         end
 
         return
+    end
+
+    if timeTravelling then
+        micro.InfoBar():Message("New cursor history branch created")
     end
 
     OmniCursorHistory[OmniCursorIndices.CurrentIndex + 1] = 
@@ -156,7 +171,8 @@ function Self.GoToPreviousHistory(bp)
     end
 
     OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex - 1;
-    micro.InfoBar():Message("Going to previous history at index ", OmniCursorIndices.CurrentIndex)
+    micro.InfoBar():Message("Going to previous history at index ", OmniCursorIndices.CurrentIndex,
+                            "/", OmniCursorIndices.EndIndex)
     GoToHistoryEntry(bp, OmniCursorHistory[OmniCursorIndices.CurrentIndex])
 end
 
@@ -166,7 +182,8 @@ function Self.GoToNextHistory(bp)
     end
 
     OmniCursorIndices.CurrentIndex = OmniCursorIndices.CurrentIndex + 1;
-    micro.InfoBar():Message("Going to next history at index ", OmniCursorIndices.CurrentIndex)
+    micro.InfoBar():Message("Going to next history at index ", OmniCursorIndices.CurrentIndex,
+                            "/", OmniCursorIndices.EndIndex)
     GoToHistoryEntry(bp, OmniCursorHistory[OmniCursorIndices.CurrentIndex])
 end
 

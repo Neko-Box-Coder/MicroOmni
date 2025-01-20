@@ -205,6 +205,16 @@ local function InitializeSettings()
         end
     end
     
+    if Common.OmniHistoryTimeTravelMulti == nil or Common.OmniHistoryTimeTravelMulti == "" then
+        Common.OmniHistoryTimeTravelMulti = 5
+    else
+        Common.OmniHistoryTimeTravelMulti = tonumber(Common.OmniHistoryTimeTravelMulti)
+        if Common.OmniHistoryTimeTravelMulti == nil then
+            Common.OmniHistoryTimeTravelMulti = 5
+        end
+    end
+    
+    
     Common.OmniCanUseNewCursor = false
     
     if Common.OmniMinimapScrollContent == nil then

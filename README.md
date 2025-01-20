@@ -201,6 +201,7 @@ Recommended binding:
 ### ⚙️ Global Cursor History Settings
 - `OmniNewFileMethod`: Same as previous
 - `OmniHistoryLineDiff`: Sets how many line difference count as new cursor history. Defaults to 5
+- `OmniHistoryTimeTravelMulti`: Multiplier to `OmniHistoryLineDiff` when in cursor history
 
 ## 🔲 Centering Cursor To Viewport
 It centers your cursor to the middle of your viewport.
