@@ -12,12 +12,14 @@ List of features:
     - [📔 Global Cursor History](#-global-cursor-history)
     - [🔲 Centering Cursor To Viewport](#-centering-cursor-to-viewport)
     - [🦘 Jump Selection](#-jump-selection)
+- 📑 Tab Control:
+    - [➕ Newtab Next To Current Tab](#-newtab-next-to-current-tab)
+    - [↔️ Tab Bar Scrolling](#%EF%B8%8F-tab-bar-scrolling)
 - 📜 Buffer/Tab Actions:
-    - [🗺️ Minimap](#%EF%B8%8F-minimap)
     - [🧦 Diff View](#-diff-view)
     - [🔦 Highlight Only (Before finding next)](#-highlight-only-before-finding-next)
-    - [📑 Newtab Next To Current Tab](#-newtab-next-to-current-tab)
     - [📁 Copy Current File Path](#-copy-current-file-path)
+    - [🗺️ Minimap](#%EF%B8%8F-minimap)
 - (WIP) Bracket jumping without on top of it
 - (WIP) Contect selection within brackets
 - (WIP) Resize split with keyboard <!-- Using https://github.com/zyedidia/micro/issues/1807#issuecomment-1907899274 -->
@@ -42,8 +44,8 @@ You can install MicroOmni using `micro -plugin install OmniMicro` by either
 
 ## 📐 Requirements
 - micro
-    - micro [nightly](https://github.com/zyedidia/micro/releases/tag/nightly)
-    - [Or from my branch (dev) github action artifacts](https://github.com/Neko-Box-Coder/micro-dev/actions))
+    - micro [v2.0.14](https://github.com/zyedidia/micro/releases/tag/v2.0.14)
+    - [My custom build of micro (dev)](https://github.com/Neko-Box-Coder/micro-dev/actions)
 - fzf
 - ripgrep
 - bat
@@ -256,34 +258,33 @@ This can be configured to use absolute line number. See settings.
 ### ⚙️ Jump Selection Type Settings
 - `OmniSelectType`: Sets the jump selection type. Can either be `relative` (default) or `absolute`
 
-## 🗺️ Minimap
-![Minimap Gif](./Resources/Minimap.gif)
+
+## ➕ Newtab Next To Current Tab
+You can create a newtab either on the right or left of the current tab by launching 
+`OmniNewTabRight` or `OmniNewTabLeft` command
+
+![New Tab Gif](./Resources/NewTab.gif)
+
 Recommended binding:
 ```json
 {
-    "Alt-M": "command:OmniMinimap",
-    //Windows
-    "Alt-Shift-M": "command:OmniMinimap",
+    "Alt-t": "command:OmniNewTabRight"
 }
 ```
 
-To see an overview of the current file based on indentation, launch the `OmniMinimap` command.
-By default it will show neighboring lines as "context" if they have the same indentations
+## ↔️ Tab Bar Scrolling
+When you have too many tabs, you can scroll via them without switching by launching
+`OmniTabScrollLeft` or `OmniTabScrollLeft` command
 
-### ⚙️ Minimap Settings
-- `OmniMinimapMaxIndent`: Max indent limit to be shown in the minimap
-    - Defaults to 5
-- `OmniMinimapContextNumLines`: Max number of context lines
-    - Defaults to 20
-- `OmniMinimapMinDistance`: Min skipping distance for the minimap
-    - Defaults to 20
-- `OmniMinimapMaxColumns`: Max number of columns in minimap, and use "..." if doesn't fit
-    - Defaults to 75
-- `OmniMinimapTargetNumLines`: Number of lines aiming to have for the minimap
-    - Defaults to 100
-- `OmniMinimapScrollContent`: Automatically scroll the content buffer when navigating in the minimap
-    - Defaults to true
+![Tab Scrolling Gif](./Resources/TabScroll.gif)
 
+Recommended binding:
+```json
+{
+    "Alt-PageUp": "command:OmniTabScrollLeft",
+    "Alt-PageDown": "command:OmniTabScrollRight"
+}
+```
 
 ## 🧦 Diff View
 To compare the current buffer with another buffer of file, launch the `OmniDiff` command.
@@ -316,21 +317,6 @@ Recommended binding:
 }
 ```
 
-
-## 📑 Newtab Next To Current Tab
-You can create a newtab either on the right or left of the current tab by launching 
-`OmniNewTabRight` or `OmniNewTabLeft` command
-
-![New Tab Gif](./Resources/NewTab.gif)
-
-Recommended binding:
-```json
-{
-    "Alt-t": "command:OmniNewTabRight"
-}
-```
-
-
 ## 📁 Copy Current File Path
 You can copy the current file absolute or relative path with `OmniCopyRelativePath` and 
 `OmniCopyAbsolutePath` command.
@@ -339,4 +325,30 @@ Recommended binding:
 
 None (Invoke it in command pane)
 
+## 🗺️ Minimap
+![Minimap Gif](./Resources/Minimap.gif)
+Recommended binding:
+```json
+{
+    "Alt-M": "command:OmniMinimap",
+    //Windows
+    "Alt-Shift-M": "command:OmniMinimap",
+}
+```
 
+To see an overview of the current file based on indentation, launch the `OmniMinimap` command.
+By default it will show neighboring lines as "context" if they have the same indentations
+
+### ⚙️ Minimap Settings
+- `OmniMinimapMaxIndent`: Max indent limit to be shown in the minimap
+    - Defaults to 5
+- `OmniMinimapContextNumLines`: Max number of context lines
+    - Defaults to 20
+- `OmniMinimapMinDistance`: Min skipping distance for the minimap
+    - Defaults to 20
+- `OmniMinimapMaxColumns`: Max number of columns in minimap, and use "..." if doesn't fit
+    - Defaults to 75
+- `OmniMinimapTargetNumLines`: Number of lines aiming to have for the minimap
+    - Defaults to 100
+- `OmniMinimapScrollContent`: Automatically scroll the content buffer when navigating in the minimap
+    - Defaults to true

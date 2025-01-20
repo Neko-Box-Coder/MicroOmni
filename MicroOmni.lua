@@ -188,6 +188,21 @@ local function OmniNewTabRight(bp)
     bp:TabMoveCmd({tostring(currentActiveIndex + 2)})
 end
 
+local function OmniTabScrollRight(bp)
+    -- local totalSize = micro.Tabs().TabWindow:TotalSize()
+    -- micro.InfoBar():Message("totalSize:", totalSize)
+    micro.Tabs().TabWindow:Scroll(25)
+    -- w.hscroll = util.Clamp(w.hscroll, 0, s-w.Width)
+end
+
+local function OmniTabScrollLeft(bp)
+    -- local totalSize = micro.Tabs().TabWindow:TotalSize()
+    -- micro.InfoBar():Message("totalSize:", totalSize)
+    micro.Tabs().TabWindow:Scroll(-25)
+    -- w.hscroll = util.Clamp(w.hscroll, 0, s-w.Width)
+end
+
+
 local function OmniNewTabLeft(bp)
     local currentActiveIndex = micro.Tabs():Active()
     bp:NewTabCmd({})
@@ -362,6 +377,9 @@ function init()
     config.MakeCommand("OmniDiff", Diff.OmniDiff, config.NoComplete)
     
     config.MakeCommand("OmniMinimap", Minimap.OmniMinimap, config.NoComplete)
+    
+    config.MakeCommand("OmniTabScrollRight", OmniTabScrollRight, config.NoComplete)
+    config.MakeCommand("OmniTabScrollLeft", OmniTabScrollLeft, config.NoComplete)
     
     config.MakeCommand("OmniTest", OmniTest, TestCompleter)
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)
