@@ -275,29 +275,38 @@ local function InitializeSettings()
 
     if Common.OmniContentArgs == nil or Common.OmniContentArgs == "" then
         Common.OmniContentArgs =
-            "--bind 'alt-f:reload:rg -i -F -uu -n {q}' "..
+            "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
+            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
+            "--bind 'alt-f:reload:rg --glob=!.git/ -i -F -uu -n {q}' "..
             "--delimiter : -i --reverse "..
             "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-            "alt-up:half-page-up,alt-down:half-page-down "..
+            "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
+            "--bind 'alt-enter:change-multi+select-all+accept' "..
             "--preview-window 'down,+{2}-/2' "..
             "--preview 'bat -f -n --highlight-line {2} {1}'"
     end
 
     if Common.OmniGotoFileArgs == nil or Common.OmniGotoFileArgs == "" then
         Common.OmniGotoFileArgs = 
+            "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
+            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
             "-i --reverse "..
             "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-            "alt-up:half-page-up,alt-down:half-page-down "..
+            "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
+            "--bind 'alt-enter:change-multi+select-all+accept' "..
             "--preview-window 'down' "..
             "--preview 'bat -f -n {}'"
     end
 
     if Common.OmniLocalSearchArgs == nil or Common.OmniLocalSearchArgs == "" then
         Common.OmniLocalSearchArgs =
+            "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
+            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
             "--bind 'start:reload:bat -n --decorations always {filePath}' "..
             "-i --reverse "..
             "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-            "alt-up:half-page-up,alt-down:half-page-down "..
+            "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
+            "--bind 'alt-enter:change-multi+select-all+accept' "..
             "--preview-window 'down,+{1}-/2' "..
             "--preview 'bat -f -n --highlight-line {1} {filePath}'"
     end

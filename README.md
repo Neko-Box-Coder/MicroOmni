@@ -69,6 +69,11 @@ Alternatively, you can get all the required executables you need for Windows in 
 
 ![Search Gif](./Resources/GlobalSearch.gif)
 
+> [!NOTE]
+> The above gif is from older version.
+> The latest version will show the default keybindings in fzf
+> ![Search Header](./Resources/SearchHeader.png)
+
 Recommended binding:
 ```json
 {
@@ -79,12 +84,17 @@ Recommended binding:
 ```
 
 To find a with keyword(s), launch command `OmniGlobalSearch` which is bindable to a key.
-1. `{fileDir}` can be used to substitute the directory path of the current file. 
-2. If successful, a fzf window will be launched. Here are the keybindings by default:
-    - up/down: Navigate results
-    - alt-up / alt-down: Navigate half page of results
-    - page-up / page-down: Scroll up and down for the preview window
-    - alt-f: Search again with text in the input field (**Non fuzzy** but case insensitive)
+1. Enter the search directory, empty current root directory. `{fileDir}` can be used to substitute with current file directory
+2. Enter keywords (separated by spaces) to be searched (This is using ripgrep and not fuzzy search)
+3. If successful, a fzf window will be launched. You can now filter with fzf fuzzy search. 
+4. Here are the keybindings by default configured:
+    - **enter**: Select
+    - **alt-enter**: Output the current filtered results to a new buffer
+    - **up/down**: Navigate results
+    - **alt-up / alt-down**: Navigate half page of results
+    - **page-up / page-down**: Scroll up and down for the preview window
+    - **alt-f**: Search again with text in the input field (**Non fuzzy** but case insensitive)
+    - **alt-q**: Abort
 
 ### ⚙️ Fuzzy Search Settings
 - `OmniFzfCmd`: The `fzf` location.
@@ -97,12 +107,16 @@ To find a with keyword(s), launch command `OmniGlobalSearch` which is bindable t
     - `hsplit`: Opens in new pane as horizontal split
 - `OmniGlobalSearchArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
-OmniContentArgs =   "--bind 'alt-f:reload:rg -i -F -uu -n {q}' "..
-                    "--delimiter : -i --reverse "..
-                    "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-                    "alt-up:half-page-up,alt-down:half-page-down "..
-                    "--preview-window 'down,+{2}-/2' "..
-                    "--preview 'bat -f -n --highlight-line {2} {1}'"
+Common.OmniContentArgs =
+            "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
+            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
+            "--bind 'alt-f:reload:rg --glob=!.git/ -i -F -uu -n {q}' "..
+            "--delimiter : -i --reverse "..
+            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+            "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
+            "--bind 'alt-enter:change-multi+select-all+accept' "..
+            "--preview-window 'down,+{2}-/2' "..
+            "--preview 'bat -f -n --highlight-line {2} {1}'"
 ```
 
 ## 🧭 Fuzzy Search For Text Locally
@@ -127,12 +141,16 @@ To search, simply launch the `OmniLocalSearch` command.
 - `OmniLocalSearchArgs`: Argument to be passed to fzf with `{filePath}` substitute with 
 the current file path. It defaults to the following:
 ```lua
-OmniLocalSearchArgs =   "--bind 'start:reload:bat -n --decorations always {filePath}' "..
-                        "-i --reverse "..
-                        "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-                        "alt-up:half-page-up,alt-down:half-page-down "..
-                        "--preview-window 'down,+{1}-/2' "..
-                        "--preview 'bat -f -n --highlight-line {1} {filePath}'"
+Common.OmniLocalSearchArgs =
+            "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
+            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
+            "--bind 'start:reload:bat -n --decorations always {filePath}' "..
+            "-i --reverse "..
+            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+            "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
+            "--bind 'alt-enter:change-multi+select-all+accept' "..
+            "--preview-window 'down,+{1}-/2' "..
+            "--preview 'bat -f -n --highlight-line {1} {filePath}'"
 ```
 
 ## 📝 Fuzzy Search For Files
@@ -157,12 +175,15 @@ To search, simply launch the `OmniGotoFile` command.
 - `OmniNewFileMethod`: Same as previous
 - `OmniGotoFileArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
-OmniGotoFileArgs =  "-i --reverse "..
-                    "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-                    "alt-up:half-page-up,alt-down:half-page-down "..
-                    "--preview-window 'down' "..
-                    "--preview 'bat -f -n {}'"
-```
+Common.OmniGotoFileArgs = 
+            "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
+            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
+            "-i --reverse "..
+            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+            "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
+            "--bind 'alt-enter:change-multi+select-all+accept' "..
+            "--preview-window 'down' "..
+            "--preview 'bat -f -n {}'"```
 
 
 ## 🚀 Word Jumping (EasyMotion)

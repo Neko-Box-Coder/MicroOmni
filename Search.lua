@@ -3,6 +3,7 @@ local util = import("micro/util")
 local filepath = import("path/filepath")
 local shell = import("micro/shell")
 local config = import("micro/config")
+local buffer = import("micro/buffer")
 
 local os = import("os")
 local runtime = import("runtime")
@@ -58,13 +59,13 @@ local function FindContent(str, searchLoc)
         selectedText = selectedText:gsub("'", "'\\''")
         firstWord = firstWord:gsub("'", "'\\''")
         fzfArgs = Common.OmniContentArgs:gsub("'", "'\\''")
-        finalCmd =  "rg -F -i -uu -n '\\''"..firstWord.."'\\'' | "..Common.OmniFzfCmd.." "..fzfArgs..
+        finalCmd =  "rg --glob=!.git/ -F -i -uu -n '\\''"..firstWord.."'\\'' | "..Common.OmniFzfCmd.." "..fzfArgs..
                     " -q '\\''"..selectedText.."'\\''"
     else
         selectedText = selectedText:gsub("'", '"')
         firstWord = firstWord:gsub("'", '""')
         fzfArgs = Common.OmniContentArgs:gsub("'", '"')
-        finalCmd =  "rg -F -i -uu -n \""..firstWord.."\" | "..Common.OmniFzfCmd.." "..fzfArgs..
+        finalCmd =  "rg --glob=!.git/ -F -i -uu -n \""..firstWord.."\" | "..Common.OmniFzfCmd.." "..fzfArgs..
                     " -q \""..selectedText.."\""
     end
 
@@ -97,17 +98,26 @@ local function FindContent(str, searchLoc)
         bp:CdCmd({currentLoc})
     end
 
-    if err ~= nil or output == "--" then
+
+    if err ~= nil then
         -- micro.InfoBar():Error("Error is: ", err:Error())
     else
-        local path, lineNumber = output:match("^(.-):%s*(%d+):")
-        
-        if searchLoc ~= nil and searchLoc ~= "" then
-            -- micro.InfoBar():Message("Open path is ", filepath.Abs(OmniContentFindPath.."/"..path))
-            path = OmniContentFindPath.."/"..path
+        local _, outputLinesCount = output:gsub('\n', '\n')
+            
+        if outputLinesCount > 1 then
+            local buf, _ = buffer.NewBuffer(output, "")
+            local splitBp = bp:VSplitIndex(buf, true)
+            splitBp:SetLocalCmd({"filetype", bp.Buf.Settings["filetype"]})
+         elseif output ~= "--" and output ~= "" and outputLinesCount == 1 then
+            local path, lineNumber = output:match("^(.-):%s*(%d+):")
+            
+            if searchLoc ~= nil and searchLoc ~= "" then
+                -- micro.InfoBar():Message("Open path is ", filepath.Abs(OmniContentFindPath.."/"..path))
+                path = OmniContentFindPath.."/"..path
+            end
+            
+            fzfParseOutput(path, bp, lineNumber, true)
         end
-        
-        fzfParseOutput(path, bp, lineNumber, true)
     end
 end
 
@@ -142,7 +152,9 @@ function Self.OmniContent(bp)
                             OnSearchDirSetDone)
 end
 
-
+-- local function TermTest(outStr, userArgs)
+--     userArgs[1]:Quit()
+-- end
 
 function Self.OmniLocalSearch(bp, args)
     local localSearchArgs = Common.OmniLocalSearchArgs:gsub("{filePath}", "\""..bp.buf.AbsPath.."\"")
@@ -153,14 +165,36 @@ function Self.OmniLocalSearch(bp, args)
 
     local output, err = shell.RunInteractiveShell(Common.OmniFzfCmd.." "..localSearchArgs, false, true)
 
+    -- -- Test code for running fzf in term pane, but it has no color :/
+    -- local buf, bufErr = buffer.NewBuffer("", "")
+    -- if bufErr ~= nil then 
+    --     micro.InfoBar():Error("Error when creating new buffer: ", err:Error())
+    --     return
+    -- end
+    -- local splitBp = bp:VSplitIndex(buf, true)
+    -- shell.RunTermEmulator(splitBp, 
+    --                     -- Common.OmniFzfCmd.." "..localSearchArgs, 
+    --                     "fzf", false, true,
+    --                    TermTest, {splitBp})
+    --                    -- callback func(out string, userargs []interface{}),
+    --                    -- userargs []interface{}) error
+
     if err ~= nil or output == "" then
         -- micro.InfoBar():Error("Error is: ", err:Error())
     else
-        local lineNumber = output:match("^%s*(.-)%s.*")
-        -- micro.InfoBar():Message("Output is ", output, " and extracted lineNumber is ", lineNumber)
-        micro.CurPane().Cursor:ResetSelection()
-        micro.CurPane():GotoCmd({lineNumber})
-        micro.CurPane():Center()
+        local _, outputLinesCount = output:gsub('\n', '\n')
+        
+        if outputLinesCount > 1 then
+            local buf, _ = buffer.NewBuffer(output, "")
+            local splitBp = bp:VSplitIndex(buf, true)
+            splitBp:SetLocalCmd({"filetype", bp.Buf.Settings["filetype"]})
+        elseif outputLinesCount == 1 then
+            local lineNumber = output:match("^%s*(.-)%s.*")
+            -- micro.InfoBar():Message("Output is ", output, " and extracted lineNumber is ", lineNumber)
+            micro.CurPane().Cursor:ResetSelection()
+            micro.CurPane():GotoCmd({lineNumber})
+            micro.CurPane():Center()
+        end
     end
 end
 
@@ -173,15 +207,65 @@ function Self.OmniGotoFile(bp)
 
     local output, err = shell.RunInteractiveShell(Common.OmniFzfCmd.." "..localGotoFileArgs, false, true)
 
+
     if err ~= nil or output == "" then
         -- micro.InfoBar():Error("Error is: ", err:Error())
     else
-        -- local lineNumber = output:match("^%s*(.-)%s.*")
-        -- local path, lineNumber = output:match("^(.-):%s*(%d+):")
+        local _, outputLinesCount = output:gsub('\n', '\n')
         
-        -- micro.InfoBar():Message("Output is ", output, " and extracted lineNumber is ", lineNumber)
-        fzfParseOutput(output, bp, "1", false)
+        if outputLinesCount > 1 then
+            local buf, _ = buffer.NewBuffer(output, "")
+            local splitBp = bp:VSplitIndex(buf, true)
+            splitBp:SetLocalCmd({"filetype", bp.Buf.Settings["filetype"]})
+        elseif outputLinesCount == 1 then
+            -- local lineNumber = output:match("^%s*(.-)%s.*")
+            -- local path, lineNumber = output:match("^(.-):%s*(%d+):")
+            
+            -- micro.InfoBar():Message("Output is ", output, " and extracted lineNumber is ", lineNumber)
+            fzfParseOutput(output, bp, "1", false)
+        end
     end
+end
+
+function Self.OmniTabSearch(bp)
+    local cleanFilepath = filepath.Clean(path)
+    local wd, wdErr = os.Getwd()
+    for i = 1, #micro.Tabs().List do
+        for j = 1, #micro.Tabs().List[i].Panes do
+            local currentPane = micro.Tabs().List[i].Panes[j]
+            local currentBuf = currentPane.Buf
+            
+            -- if currentBuf ~= nil then
+            --     micro.Log("cleanFilepath:", cleanFilepath)
+            --     micro.Log("currentBuf.AbsPath:", currentBuf.AbsPath)
+            --     micro.Log("currentBuf.Path:", currentBuf.Path)
+            -- end
+            
+            if currentBuf ~= nil and currentBuf.AbsPath ~= "" and currentBuf.AbsPath ~= nil then
+                local calculatedAbsPath = filepath.Abs(cleanFilepath)
+                if not filepath.IsAbs(cleanFilepath) and wdErr == nil then
+                    local absPath, absErr = filepath.Abs(filepath.Join(wd, cleanFilepath))
+                    -- micro.Log("absPath:", absPath)
+                    if absErr == nil then
+                        calculatedAbsPath = absPath
+                    end
+                end
+                -- micro.Log("calculatedAbsPath:", calculatedAbsPath)
+                
+                if  filepath.Clean(currentBuf.AbsPath) == calculatedAbsPath or
+                    filepath.Clean(currentBuf.AbsPath) == cleanFilepath or 
+                    filepath.Clean(currentBuf.Path) == cleanFilepath then
+
+                    -- NOTE: SetActive functions has index starting at 0 instead lol
+                    micro.Tabs():SetActive(i - 1)
+                    micro.Tabs().List[i]:SetActive(j - 1)
+                    return true
+                end
+            end
+        end
+    end
+    
+    local output, err = shell.RunInteractiveShell(Common.OmniFzfCmd.." "..localGotoFileArgs, false, true)
 end
 
 return Self
