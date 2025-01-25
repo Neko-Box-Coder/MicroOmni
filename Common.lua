@@ -4,6 +4,7 @@ local buffer = import("micro/buffer")
 local util = import("micro/util")
 
 local os = import("os")
+local ioutil = import("io/ioutil")
 local filepath = import("path/filepath")
 
 local Self = {}
@@ -11,10 +12,12 @@ local Self = {}
 Self.OmniContentArgs = config.GetGlobalOption("OmniGlobalSearchArgs")
 Self.OmniLocalSearchArgs = config.GetGlobalOption("OmniLocalSearchArgs")
 Self.OmniGotoFileArgs = config.GetGlobalOption("OmniGotoFileArgs")
+Self.OmniTabSearchArgs = config.GetGlobalOption("OmniTabSearchArgs")
+
 Self.OmniSelectType = config.GetGlobalOption("OmniSelectType")
 Self.OmniHistoryLineDiff = config.GetGlobalOption("OmniHistoryLineDiff")
 Self.OmniHistoryTimeTravelMulti = config.GetGlobalOption("OmniHistoryTimeTravelMulti")
-Self.OmniCanUseNewCursor = config.GetGlobalOption("OmniCanUseNewCursor")
+Self.OmniCanUseAddCursor = config.GetGlobalOption("OmniCanUseAddCursor")
 
 -- TODO: Allow setting highlight to use regex or not
 
@@ -111,7 +114,7 @@ function Self.OpenPaneIfExist(path)
             --     micro.Log("currentBuf.Path:", currentBuf.Path)
             -- end
             
-            if currentBuf ~= nil and currentBuf.AbsPath ~= "" and currentBuf.AbsPath ~= nil then
+            if currentBuf ~= nil and currentBuf.AbsPath ~= nil and currentBuf.AbsPath ~= "" then
                 local calculatedAbsPath = filepath.Abs(cleanFilepath)
                 if not filepath.IsAbs(cleanFilepath) and wdErr == nil then
                     local absPath, absErr = filepath.Abs(filepath.Join(wd, cleanFilepath))
@@ -193,6 +196,28 @@ function Self.LocBoundCheck(buf, loc)
     end
 
     return returnLoc
+end
+
+function Self.CreateRuntimeFile(relativePath, data)
+    local microOmniDir = config.ConfigDir.."/plug/MicroOmni/"
+    if not Self.path_exists(filepath.Dir(microOmniDir..relativePath)) then
+        local err = os.MkdirAll(filepath.Dir(microOmniDir..relativePath), os.ModePerm)
+        if err ~= nil then
+            micro.InfoBar():Error(  "Failed to create dir: ", filepath.Dir(microOmniDir..relativePath), 
+                                    " with error ", err)
+            return "", false
+        end
+    end
+    
+    local err = ioutil.WriteFile(   microOmniDir..relativePath, 
+                                    data,
+                                    os.ModePerm)
+    if err ~= nil then
+        micro.InfoBar():Error(  "Failed to write to file: ", microOmniDir..relativePath, 
+                                " with error ", err)
+        return "", false
+    end
+    return microOmniDir..relativePath, true
 end
 
 return Self

@@ -12,17 +12,21 @@ List of features:
     - [📔 Global Cursor History](#-global-cursor-history)
     - [🔲 Centering Cursor To Viewport](#-centering-cursor-to-viewport)
     - [🦘 Jump Selection](#-jump-selection)
+    - [🔀 Better Multi Cursor](#-better-multi-cursor)
 - 📑 Tab Control:
+    - [🗃️ Fuzzy Search For Opened Tabs](#%EF%B8%8F-fuzzy-search-for-opened-tabs)
     - [➕ Newtab Next To Current Tab](#-newtab-next-to-current-tab)
     - [↔️ Tab Bar Scrolling](#%EF%B8%8F-tab-bar-scrolling)
-- 📜 Buffer/Tab Actions:
+- 📜 Buffers Actions:
     - [🧦 Diff View](#-diff-view)
     - [🔦 Highlight Only (Before finding next)](#-highlight-only-before-finding-next)
     - [📁 Copy Current File Path](#-copy-current-file-path)
     - [🗺️ Minimap](#%EF%B8%8F-minimap)
 - (WIP) Bracket jumping without on top of it
-- (WIP) Contect selection within brackets
+- (WIP) Content selection within brackets
 - (WIP) Resize split with keyboard <!-- Using https://github.com/zyedidia/micro/issues/1807#issuecomment-1907899274 -->
+
+---
 
 ## 📦️ Installation
 You can install MicroOmni using `micro -plugin install OmniMicro` by either
@@ -41,6 +45,7 @@ You can install MicroOmni using `micro -plugin install OmniMicro` by either
 
 - Alternatively, you can `git clone https://github.com/Neko-Box-Coder/MicroOmni` to your micro `plug` directory
 
+---
 
 ## 📐 Requirements
 - micro
@@ -66,6 +71,7 @@ Alternatively, you can get all the required executables you need for Windows in 
 > [!NOTE]
 > On Windows, the directory that has the required executables must be added to the PATH environment variable
 
+---
 
 ## 🔍️ Fuzzy Search For Text Globally
 
@@ -78,11 +84,9 @@ Alternatively, you can get all the required executables you need for Windows in 
 
 Recommended binding:
 ```json
-{
     "Alt-F": "command:OmniGlobalSearch",
     //Windows
     "Alt-Shift-F": "command:OmniGlobalSearch"
-}
 ```
 
 To find a with keyword(s), launch command `OmniGlobalSearch` which is bindable to a key.
@@ -121,15 +125,15 @@ Common.OmniContentArgs =
             "--preview 'bat -f -n --highlight-line {2} {1}'"
 ```
 
+---
+
 ## 🧭 Fuzzy Search For Text Locally
 
 ![Local Gif](./Resources/LocalSearch.gif)
 
 Recommended binding:
 ```json
-{
     "Alt-f": "command:OmniLocalSearch"
-}
 ```
 
 Similar to "Fuzzy Search For Text Globally", this do a fuzzy search for the current file.
@@ -155,21 +159,21 @@ Common.OmniLocalSearchArgs =
             "--preview 'bat -f -n --highlight-line {1} {filePath}'"
 ```
 
+---
+
 ## 📝 Fuzzy Search For Files
 
 ![Search File Gif](./Resources/FileSearch.gif)
 
 Recommended binding:
 ```json
-{
-    "Alt-G": "command:OmniGotoFile"
+    "Alt-G": "command:OmniGotoFile",
     //Windows
     "Alt-Shift-G": "command:OmniGotoFile"
-}
 ```
 
-Similar to "Fuzzy Search For Files Recursively", this do a fuzzy search for all the files
-The default control is the same as "Fuzzy Search For Files Recursively".
+Similar to "Fuzzy Search For Text Globally", this do a fuzzy search for all the files
+The default control is the same as "Fuzzy Search For Text Globally".
 
 To search, simply launch the `OmniGotoFile` command.
 
@@ -187,7 +191,6 @@ Common.OmniGotoFileArgs =
             "--preview-window 'down' "..
             "--preview 'bat -f -n {}'"```
 
-
 ## 🚀 Word Jumping (EasyMotion)
 To jump to a word anywhere on the screen, launch the `OmniJump` command **WITH** a keybinding
 
@@ -195,11 +198,10 @@ To jump to a word anywhere on the screen, launch the `OmniJump` command **WITH**
 
 Recommended binding:
 ```json
-{
     "Alt-j": "command:OmniJump"
-}
 ```
 
+---
 
 ## 📔 Global Cursor History
 When you are editing multiple files or jumping between different functions, 
@@ -211,20 +213,19 @@ This is similar to the navigate back and forward commands in VSCode
 
 Recommended binding:
 ```json
-{
     "Alt-{": "command:OmniPreviousHistory",
     "Alt-}": "command:OmniNextHistory",
     //Windows
     "Alt-Shift-{": "command:OmniPreviousHistory",
     "Alt-Shift-}": "command:OmniNextHistory"
-}
 ```
-
 
 ### ⚙️ Global Cursor History Settings
 - `OmniNewFileMethod`: Same as previous
 - `OmniHistoryLineDiff`: Sets how many line difference count as new cursor history. Defaults to 5
 - `OmniHistoryTimeTravelMulti`: Multiplier to `OmniHistoryLineDiff` when in cursor history
+
+---
 
 ## 🔲 Centering Cursor To Viewport
 It centers your cursor to the middle of your viewport.
@@ -232,21 +233,19 @@ It centers your cursor to the middle of your viewport.
 ![Center Gif](./Resources/Center.gif)
 Recommended binding:
 ```json
-{
     "Alt-m": "command:OmniCenter"
-}
 ```
+
+---
 
 ## 🦘 Jump Selection
 ![Jump Select Gif](./Resources/JumpSelect.gif)
 
 Recommended binding:
 ```json
-{
     "Alt-J": "command-edit:OmniJumpSelect ",
     //Windows
     "Alt-Shift-J": "command-edit:OmniJumpSelect "
-}
 ```
 
 To select a section based on line number, launch the `OmniJumpSelect` command with 
@@ -258,6 +257,72 @@ This can be configured to use absolute line number. See settings.
 ### ⚙️ Jump Selection Type Settings
 - `OmniSelectType`: Sets the jump selection type. Can either be `relative` (default) or `absolute`
 
+---
+
+## 🔀 Better Multi Cursor
+
+It spawns/moves your cursor to the next [highlight](#-highlight-only-before-finding-next) match, 
+or act the same as `SpawnMultiCursor` if there's no [highlight](#-highlight-only-before-finding-next)
+
+Meaning you can use regex expression to spawn multi-cursors.
+
+Recommended binding:
+```json
+    "Alt-d": "command:OmniSpawnCursorNextHighlight"
+    //OmniMoveLastCursorNextHighlight
+```
+
+### ⚙️ Better Multi Cursor Settings
+Due to how the lua interface works, `AddCursor()` (from micro) was not added until recently. 
+Therefore, a workaround was created to add multi cursor but this doesn't behave exactly like 
+`SpawnMultiCursor`.
+
+The differences are that `AddCursor()` will **select** the highlight text but the workaround will 
+simply just add the cursor to the end of the highlight.
+
+This can be set with `OmniCanUseNewCursor`.
+
+If you are on latest master or using [my fork](https://github.com/Neko-Box-Coder/micro-dev/actions)
+you can safely turn `OmniCanUseAddCursor` on, otherwise just leave it because it can crash micro.
+
+- `OmniCanUseAddCursor`: Sets if MicroOmni can use the `AddCursor()` interface or not.
+    - Defaults to `false`
+
+---
+
+## 🗃️ Fuzzy Search For Opened Tabs
+
+![Search Tab Gif](./Resources/TabSearch.gif)
+
+Recommended binding:
+```json
+    "Alt-T": "command:OmniTabSearch",
+    //Windows
+    "Alt-Shift-T": "command:OmniTabSearch"
+```
+
+Similar to "Fuzzy Search For Text Globally", this do a fuzzy search for all the files
+The default control is the same as "Fuzzy Search For Text Globally".
+
+To search, simply launch the `OmniTabSearch` command.
+
+### ⚙️ Fuzzy Search Settings
+- `OmniNewFileMethod`: Same as previous
+- `OmniTabSearchArgs`: Argument to be passed to fzf. It defaults to the following:
+```lua
+Common.OmniTabSearchArgs = 
+            "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
+            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
+            "--bind 'start:reload:bat {filePath}' "..
+            "--delimiter : -i --reverse "..
+            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+            "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
+            "--bind 'alt-enter:change-multi+select-all+accept' "..
+            "--preview-window 'down,+{2}-/2' "..
+            "--preview 'bat -f -n --highlight-line {2} {1}'"
+```
+
+---
 
 ## ➕ Newtab Next To Current Tab
 You can create a newtab either on the right or left of the current tab by launching 
@@ -267,10 +332,10 @@ You can create a newtab either on the right or left of the current tab by launch
 
 Recommended binding:
 ```json
-{
     "Alt-t": "command:OmniNewTabRight"
-}
 ```
+
+---
 
 ## ↔️ Tab Bar Scrolling
 When you have too many tabs, you can scroll via them without switching by launching
@@ -280,11 +345,11 @@ When you have too many tabs, you can scroll via them without switching by launch
 
 Recommended binding:
 ```json
-{
     "Alt-PageUp": "command:OmniTabScrollLeft",
     "Alt-PageDown": "command:OmniTabScrollRight"
-}
 ```
+
+---
 
 ## 🧦 Diff View
 To compare the current buffer with another buffer of file, launch the `OmniDiff` command.
@@ -303,7 +368,7 @@ Recommended binding:
 
 None (Invoke it in command pane)
 
-
+---
 
 ## 🔦 Highlight Only (Before finding next)
 To highlight anything without going to it, launch the `OmniHighlightOnly` command.
@@ -312,10 +377,10 @@ To highlight anything without going to it, launch the `OmniHighlightOnly` comman
 
 Recommended binding:
 ```json
-{
     "Alt-h": "command:OmniHighlightOnly"
-}
 ```
+
+---
 
 ## 📁 Copy Current File Path
 You can copy the current file absolute or relative path with `OmniCopyRelativePath` and 
@@ -325,15 +390,15 @@ Recommended binding:
 
 None (Invoke it in command pane)
 
+---
+
 ## 🗺️ Minimap
 ![Minimap Gif](./Resources/Minimap.gif)
 Recommended binding:
 ```json
-{
     "Alt-M": "command:OmniMinimap",
     //Windows
-    "Alt-Shift-M": "command:OmniMinimap",
-}
+    "Alt-Shift-M": "command:OmniMinimap"
 ```
 
 To see an overview of the current file based on indentation, launch the `OmniMinimap` command.
