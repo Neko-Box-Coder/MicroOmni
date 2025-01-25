@@ -4,6 +4,8 @@ local filepath = import("path/filepath")
 local shell = import("micro/shell")
 local config = import("micro/config")
 local buffer = import("micro/buffer")
+local ioutil = import("io/ioutil")
+
 
 local os = import("os")
 local runtime = import("runtime")
@@ -228,44 +230,56 @@ function Self.OmniGotoFile(bp)
 end
 
 function Self.OmniTabSearch(bp)
-    local cleanFilepath = filepath.Clean(path)
-    local wd, wdErr = os.Getwd()
+    local buffersStr = ""
     for i = 1, #micro.Tabs().List do
         for j = 1, #micro.Tabs().List[i].Panes do
             local currentPane = micro.Tabs().List[i].Panes[j]
             local currentBuf = currentPane.Buf
             
-            -- if currentBuf ~= nil then
-            --     micro.Log("cleanFilepath:", cleanFilepath)
-            --     micro.Log("currentBuf.AbsPath:", currentBuf.AbsPath)
-            --     micro.Log("currentBuf.Path:", currentBuf.Path)
-            -- end
-            
-            if currentBuf ~= nil and currentBuf.AbsPath ~= "" and currentBuf.AbsPath ~= nil then
-                local calculatedAbsPath = filepath.Abs(cleanFilepath)
-                if not filepath.IsAbs(cleanFilepath) and wdErr == nil then
-                    local absPath, absErr = filepath.Abs(filepath.Join(wd, cleanFilepath))
-                    -- micro.Log("absPath:", absPath)
-                    if absErr == nil then
-                        calculatedAbsPath = absPath
-                    end
+            if currentBuf ~= nil then
+                local currentText = ""
+                if currentBuf.Path ~= nil and currentBuf.Path ~= "" then
+                    currentText = currentBuf.Path
+                elseif currentBuf.AbsPath ~= nil and currentBuf.AbsPath ~= "" then
+                    currentText = currentBuf.AbsPath
                 end
-                -- micro.Log("calculatedAbsPath:", calculatedAbsPath)
                 
-                if  filepath.Clean(currentBuf.AbsPath) == calculatedAbsPath or
-                    filepath.Clean(currentBuf.AbsPath) == cleanFilepath or 
-                    filepath.Clean(currentBuf.Path) == cleanFilepath then
-
-                    -- NOTE: SetActive functions has index starting at 0 instead lol
-                    micro.Tabs():SetActive(i - 1)
-                    micro.Tabs().List[i]:SetActive(j - 1)
-                    return true
+                if currentPane.Cursor ~= nil then
+                    currentText = currentText..":"..tostring(currentPane.Cursor.Loc.Y + 1)
                 end
+                
+                buffersStr = buffersStr..currentText.."\n"
             end
         end
     end
+    local createdPath, success = 
+        Common.CreateRuntimeFile("./temp/tabSearch.txt", buffersStr)
     
-    local output, err = shell.RunInteractiveShell(Common.OmniFzfCmd.." "..localGotoFileArgs, false, true)
+    local fzfArgs = Common.OmniTabSearchArgs:gsub("{filePath}", "\""..createdPath.."\"")
+    
+    local finalCmd =  Common.OmniFzfCmd.." "..fzfArgs
+    local output, err = shell.RunInteractiveShell(finalCmd, false, true)
+    
+    if err ~= nil then
+        -- micro.InfoBar():Error("Error is: ", err:Error())
+    else
+        local _, outputLinesCount = output:gsub('\n', '\n')
+            
+        if outputLinesCount > 1 then
+            local buf, _ = buffer.NewBuffer(output, "")
+            local splitBp = bp:VSplitIndex(buf, true)
+            splitBp:SetLocalCmd({"filetype", bp.Buf.Settings["filetype"]})
+         elseif output ~= "--" and output ~= "" and outputLinesCount == 1 then
+            local path, lineNumber = output:match("^(.-):%s*(%d+)")
+            
+            if searchLoc ~= nil and searchLoc ~= "" then
+                -- micro.InfoBar():Message("Open path is ", filepath.Abs(OmniContentFindPath.."/"..path))
+                path = OmniContentFindPath.."/"..path
+            end
+            
+            fzfParseOutput(path, bp, lineNumber, true)
+        end
+    end
 end
 
 return Self

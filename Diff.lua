@@ -2,11 +2,7 @@ local micro = import("micro")
 
 local shell = import("micro/shell")
 local buffer = import("micro/buffer")
-
 local filepath = import("path/filepath")
-local os = import("os")
-local ioutil = import("io/ioutil")
-
 local config = import("micro/config")
 local fmt = import('fmt')
 package.path = fmt.Sprintf('%s;%s/plug/MicroOmni/?.lua', package.path, config.ConfigDir)
@@ -18,29 +14,6 @@ local Self = {}
 local OmniDiffPlusFile = true
 local OmniDiffTargetPanes = {}
 local OmniDiffDiffPanes = {}
-
-
-local function createRuntimeFile(relativePath, data)
-    local microOmniDir = config.ConfigDir.."/plug/MicroOmni/"
-    if not Common.path_exists(filepath.Dir(microOmniDir..relativePath)) then
-        local err = os.MkdirAll(filepath.Dir(microOmniDir..relativePath), os.ModePerm)
-        if err ~= nil then
-            micro.InfoBar():Error(  "Failed to create dir: ", filepath.Dir(microOmniDir..relativePath), 
-                                    " with error ", err)
-            return "", false
-        end
-    end
-    
-    local err = ioutil.WriteFile(   microOmniDir..relativePath, 
-                                    data,
-                                    os.ModePerm)
-    if err ~= nil then
-        micro.InfoBar():Error(  "Failed to write to file: ", microOmniDir..relativePath, 
-                                " with error ", err)
-        return "", false
-    end
-    return microOmniDir..relativePath, true
-end
 
 local function processDiffOutput(output)
     local outputLines = {}
@@ -214,8 +187,8 @@ local function OnDiffFinishCallback(resp, cancelled)
         -- Create temp files if needed
         if tabSpecified and micro.Tabs().List[tabIndex].Panes[splitIndex].Buf:Modified() then
             local createdPath, success = 
-                createRuntimeFile( "./temp/minus.temp",
-                                    micro.Tabs().List[tabIndex].Panes[splitIndex].Buf:Bytes())
+                Common.CreateRuntimeFile(   "./temp/minus.temp",
+                                            micro.Tabs().List[tabIndex].Panes[splitIndex].Buf:Bytes())
             if not success then
                 return
             end
@@ -224,7 +197,7 @@ local function OnDiffFinishCallback(resp, cancelled)
         
         if micro.CurPane().Buf:Modified() then
             local createdPath, success = 
-                createRuntimeFile("./temp/plus.temp", micro.CurPane().Buf:Bytes())
+                Common.CreateRuntimeFile("./temp/plus.temp", micro.CurPane().Buf:Bytes())
             if not success then
                 return
             end
@@ -238,7 +211,7 @@ local function OnDiffFinishCallback(resp, cancelled)
         if micro.CurPane().Buf:Modified() then
             micro.Log("A")
             local createdPath, success = 
-                createRuntimeFile("./temp/minus.temp", micro.CurPane().Buf:Bytes())
+                Common.CreateRuntimeFile("./temp/minus.temp", micro.CurPane().Buf:Bytes())
             if not success then
                 return
             end
@@ -247,8 +220,8 @@ local function OnDiffFinishCallback(resp, cancelled)
     
         if tabSpecified and micro.Tabs().List[tabIndex].Panes[splitIndex].Buf:Modified() then
             local createdPath, success = 
-                createRuntimeFile( "./temp/plus.temp",
-                                    micro.Tabs().List[tabIndex].Panes[splitIndex].Buf:Bytes())
+                Common.CreateRuntimeFile(   "./temp/plus.temp",
+                                            micro.Tabs().List[tabIndex].Panes[splitIndex].Buf:Bytes())
             if not success then
                 return
             end

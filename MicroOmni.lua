@@ -1,4 +1,4 @@
-VERSION = "0.2.3"
+VERSION = "0.3.0"
 
 -- luacheck . --globals import VERSION preQuit onAnyEvent init --ignore 212 542 611 612 613 614
 
@@ -229,8 +229,9 @@ local function InitializeSettings()
         end
     end
     
-    
-    Common.OmniCanUseNewCursor = false
+    if Common.OmniCanUseAddCursor == nil then
+        Common.OmniCanUseAddCursor = false
+    end
     
     if Common.OmniMinimapScrollContent == nil then
         Common.OmniMinimapScrollContent = true
@@ -325,6 +326,19 @@ local function InitializeSettings()
             "--preview-window 'down,+{1}-/2' "..
             "--preview 'bat -f -n --highlight-line {1} {filePath}'"
     end
+    
+    if Common.OmniTabSearchArgs == nil or Common.OmniTabSearchArgs == "" then 
+        Common.OmniTabSearchArgs = 
+            "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
+            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
+            "--bind 'start:reload:bat {filePath}' "..
+            "--delimiter : -i --reverse "..
+            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+            "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
+            "--bind 'alt-enter:change-multi+select-all+accept' "..
+            "--preview-window 'down,+{2}-/2' "..
+            "--preview 'bat -f -n --highlight-line {2} {1}'"
+    end
 
     if Common.OmniFzfCmd == nil then
         Common.OmniFzfCmd = "fzf"
@@ -380,6 +394,10 @@ function init()
     
     config.MakeCommand("OmniTabScrollRight", OmniTabScrollRight, config.NoComplete)
     config.MakeCommand("OmniTabScrollLeft", OmniTabScrollLeft, config.NoComplete)
+    
+    config.MakeCommand("OmniTabSearch", Search.OmniTabSearch, config.NoComplete)
+    
+    
     
     config.MakeCommand("OmniTest", OmniTest, TestCompleter)
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)

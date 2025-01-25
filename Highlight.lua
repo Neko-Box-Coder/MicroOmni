@@ -105,7 +105,7 @@ local function PerformMultiCursor(bp, forceMove)
     local lastCursor = bp.Buf:GetCursor(bp.Buf:NumCursors() - 1)
     local moveCursor = false
     
-    if Common.OmniCanUseNewCursor then
+    if Common.OmniCanUseAddCursor then
         moveCursor = not lastCursor:HasSelection()
     else
         moveCursor = ((bp.Buf:NumCursors() == 1 and not OmniFirstMultiCursorSpawned) and {true} or {false})[1]
@@ -120,12 +120,13 @@ local function PerformMultiCursor(bp, forceMove)
         bp:Deselect()
         local currentLoc = lastCursor.Loc
         -- searchStart = bp.Buf, buffer.Loc(currentLoc.X, currentLoc.Y)
-        searchStart = Common.LocBoundCheck(bp.Buf, buffer.Loc(currentLoc.X, currentLoc.Y - 1))
+        -- searchStart = Common.LocBoundCheck(bp.Buf, buffer.Loc(currentLoc.X, currentLoc.Y - 1))
+        searchStart = Common.LocBoundCheck(bp.Buf, buffer.Loc(0, currentLoc.Y))
         -- bp.Cursor:Deselect(false)
     else
         OmniFirstMultiCursorSpawned = false
         
-        if Common.OmniCanUseNewCursor then
+        if Common.OmniCanUseAddCursor then
             searchStart = buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y)
         else
             searchStart = buffer.Loc(lastCursor.Loc.X, lastCursor.Loc.Y)
@@ -146,7 +147,7 @@ local function PerformMultiCursor(bp, forceMove)
     
     -- Spawn new cursor if we don't move the last cursor
     if not moveCursor then
-        if Common.OmniCanUseNewCursor then
+        if Common.OmniCanUseAddCursor then
             lastCursor = buffer.NewCursor(bp.Buf, buffer.Loc(0, 0))
         else
             if not bp:SpawnMultiCursorDown() then
@@ -159,7 +160,7 @@ local function PerformMultiCursor(bp, forceMove)
         end
     end
     
-    if Common.OmniCanUseNewCursor then
+    if Common.OmniCanUseAddCursor then
         lastCursor:SetSelectionStart(foundLocs[1])
         lastCursor:SetSelectionEnd(foundLocs[2])
         lastCursor.OrigSelection[1].X = lastCursor.CurSelection[1].X
