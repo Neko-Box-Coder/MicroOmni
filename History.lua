@@ -15,6 +15,7 @@ local OmniCursorIndices =
     EndIndex = 0,
     CurrentIndex = 0,
 }
+local OmniTimeTravelMessageShowed = false
 
 package.path = fmt.Sprintf('%s;%s/plug/MicroOmni/?.lua', package.path, config.ConfigDir)
 local Common = require("Common")
@@ -64,6 +65,7 @@ function Self.RecordCursorHistory()
         OmniCursorIndices.StartIndex = 1
         OmniCursorIndices.EndIndex = 1
         OmniCursorIndices.CurrentIndex = 1
+        OmniTimeTravelMessageShowed = false
         return
     end
 
@@ -80,11 +82,12 @@ function Self.RecordCursorHistory()
     if  currentHistory.FileId == OmniCursorReverseFilePathMap[bufPath] and 
         math.abs(currentHistory.CursorLoc.Y - currentCursorLoc.Y) < lineDiff then
 
-        if timeTravelling then
+        if timeTravelling and not OmniTimeTravelMessageShowed then
             micro.InfoBar():Message("Cursor time travel (anchor lines ", 
                                     math.max(currentHistory.CursorLoc.Y-lineDiff+1, 1), "-", 
                                     currentHistory.CursorLoc.Y+lineDiff+1,"): ", 
                                     OmniCursorIndices.CurrentIndex, "/", OmniCursorIndices.EndIndex)
+            OmniTimeTravelMessageShowed = true
         end
         -- Just update X if on the same line
         if currentHistory.CursorLoc.Y == currentCursorLoc.Y then
@@ -99,6 +102,8 @@ function Self.RecordCursorHistory()
     if timeTravelling then
         micro.InfoBar():Message("New cursor history branch created")
     end
+    
+    OmniTimeTravelMessageShowed = false
 
     OmniCursorHistory[OmniCursorIndices.CurrentIndex + 1] = 
     {
@@ -142,6 +147,7 @@ local function GoToHistoryEntry(bp, entry)
     micro.Log(  "Goto Entry: ", OmniCursorFilePathMap[entry.FileId], 
                 ", ", entry.CursorLoc.X, ", ", entry.CursorLoc.Y)
 
+    OmniTimeTravelMessageShowed = false
     local entryFilePath = OmniCursorFilePathMap[entry.FileId]
 
     -- micro.Log("os.Getwd():", os.Getwd())

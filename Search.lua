@@ -4,7 +4,6 @@ local filepath = import("path/filepath")
 local shell = import("micro/shell")
 local config = import("micro/config")
 local buffer = import("micro/buffer")
-local ioutil = import("io/ioutil")
 
 
 local os = import("os")
@@ -271,12 +270,6 @@ function Self.OmniTabSearch(bp)
             splitBp:SetLocalCmd({"filetype", bp.Buf.Settings["filetype"]})
          elseif output ~= "--" and output ~= "" and outputLinesCount == 1 then
             local path, lineNumber = output:match("^(.-):%s*(%d+)")
-            
-            if searchLoc ~= nil and searchLoc ~= "" then
-                -- micro.InfoBar():Message("Open path is ", filepath.Abs(OmniContentFindPath.."/"..path))
-                path = OmniContentFindPath.."/"..path
-            end
-            
             fzfParseOutput(path, bp, lineNumber, true)
         end
     end

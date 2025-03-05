@@ -2,7 +2,6 @@ local micro = import("micro")
 
 local shell = import("micro/shell")
 local buffer = import("micro/buffer")
-local filepath = import("path/filepath")
 local config = import("micro/config")
 local fmt = import('fmt')
 package.path = fmt.Sprintf('%s;%s/plug/MicroOmni/?.lua', package.path, config.ConfigDir)

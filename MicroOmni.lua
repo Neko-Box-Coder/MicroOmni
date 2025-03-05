@@ -1,4 +1,4 @@
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 
 -- luacheck . --globals import VERSION preQuit onAnyEvent init --ignore 212 542 611 612 613 614
 
@@ -87,22 +87,36 @@ local function OmniSelect(bp, args)
     bp:Relocate()
 end
 
+local function Internal_OmniCopyPathRelative(yes, cancelled)
+    if cancelled or not yes then
+        return
+    end
+    local bp = micro.CurPane()
+    if bp.Buf == nil then return end
+    WriteToClipboardWorkaround(bp.Buf.Path)
+    -- clipboard.Write(bp.Buf.Path, clipboard.ClipboardReg)
+    micro.InfoBar():Message(bp.Buf.Path, " copied into clipboard")
+end
 
+local function Internal_OmniCopyPathAbsolute(yes, cancelled)
+    if cancelled or not yes then
+        return
+    end
+    local bp = micro.CurPane()
+    if bp.Buf == nil then return end
+    WriteToClipboardWorkaround(bp.Buf.AbsPath)
+    -- clipboard.Write(bp.Buf.AbsPath, clipboard.ClipboardReg)
+    micro.InfoBar():Message(bp.Buf.AbsPath, " copied into clipboard")
+end
 
 local function OmniCopyRelativePath(bp)
     if bp.Buf == nil then return end
-
-    -- clipboard.Write(bp.Buf.Path, clipboard.ClipboardReg)
-    WriteToClipboardWorkaround(bp.Buf.Path)
-    micro.InfoBar():Message(bp.Buf.Path, " copied into clipboard")
+    micro.InfoBar():YNPrompt("Copy? (y/n/esc) > ", Internal_OmniCopyPathRelative)
 end
 
 local function OmniCopyAbsolutePath(bp)
     if bp.Buf == nil then return end
-    
-    -- clipboard.Write(bp.Buf.AbsPath, clipboard.ClipboardReg)
-    WriteToClipboardWorkaround(bp.Buf.AbsPath)
-    micro.InfoBar():Message(bp.Buf.AbsPath, " copied into clipboard")
+    micro.InfoBar():YNPrompt("Copy? (y/n/esc) > ", Internal_OmniCopyPathAbsolute)
 end
 
 local function OmniCenter(bp)
