@@ -148,7 +148,7 @@ local function PerformMultiCursor(bp, forceMove)
     -- Spawn new cursor if we don't move the last cursor
     if not moveCursor then
         if Common.OmniCanUseAddCursor then
-            lastCursor = buffer.NewCursor(bp.Buf, buffer.Loc(0, 0))
+            lastCursor = bp:SpawnCursorAtLoc(buffer.Loc(0, 0))
         else
             if not bp:SpawnMultiCursorDown() then
                 if not bp:SpawnMultiCursorUp() then
