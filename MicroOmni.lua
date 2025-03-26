@@ -1,4 +1,4 @@
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 
 -- luacheck . --globals import VERSION preQuit onAnyEvent init --ignore 212 542 611 612 613 614
 
