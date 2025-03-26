@@ -66,14 +66,14 @@ local function FindContent(str, searchLoc)
         selectedText = selectedText:gsub("'", '"')
         firstWord = firstWord:gsub("'", '""')
         fzfArgs = Common.OmniContentArgs:gsub("'", '"')
-        finalCmd =  "rg --glob=!.git/ -F -i -uu -n \""..firstWord.."\" | "..Common.OmniFzfCmd.." "..fzfArgs..
+        finalCmd =  "rg --glob=!.git/ -F -i -uu -n ^\""..firstWord.."^\" | "..Common.OmniFzfCmd.." "..fzfArgs..
                     " -q \""..selectedText.."\""
     end
 
     if currentOS == "Unix" then
         finalCmd = "sh -c \'"..finalCmd.."\'"
     else
-        finalCmd = "cmd /s /v /c "..finalCmd..""
+        finalCmd = "cmd /s /v:on /c "..finalCmd..""
     end
 
     micro.Log("Running search cmd: ", finalCmd)
