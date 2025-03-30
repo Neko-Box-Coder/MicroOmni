@@ -280,63 +280,78 @@ local function InitializeSettings()
     
     
     if config.GetGlobalOption("OmniGlobalSearchArgs") ~= nil then
-        micro.InfoBar():Error("OmniGlobalSearchArgs is no longer used, use MicroOmni.GlobalSearchArgs instead")
+        micro.InfoBar():Error(  "OmniGlobalSearchArgs is no longer used, " .. 
+                                "use MicroOmni.GlobalSearchArgs instead")
     end
 
     if config.GetGlobalOption("OmniLocalSearchArgs") ~= nil then
-        micro.InfoBar():Error("OmniLocalSearchArgs is no longer used, use MicroOmni.LocalSearchArgs instead")
+        micro.InfoBar():Error(  "OmniLocalSearchArgs is no longer used, " .. 
+                                "use MicroOmni.LocalSearchArgs instead")
     end
 
     if config.GetGlobalOption("OmniGotoFileArgs") ~= nil then
-        micro.InfoBar():Error("OmniGotoFileArgs is no longer used, use MicroOmni.GotoFileArgs instead")
+        micro.InfoBar():Error(  "OmniGotoFileArgs is no longer used, " .. 
+                                "use MicroOmni.GotoFileArgs instead")
     end
 
     if config.GetGlobalOption("OmniTabSearchArgs") ~= nil then
-        micro.InfoBar():Error("OmniTabSearchArgs is no longer used, use MicroOmni.TabSearchArgs instead")
+        micro.InfoBar():Error(  "OmniTabSearchArgs is no longer used, " .. 
+                                "use MicroOmni.TabSearchArgs instead")
     end
 
     if config.GetGlobalOption("OmniSelectType") ~= nil then
-        micro.InfoBar():Error("OmniSelectType is no longer used, use MicroOmni.SelectType instead")
+        micro.InfoBar():Error(  "OmniSelectType is no longer used, " .. 
+                                "use MicroOmni.SelectType instead")
     end
 
     if config.GetGlobalOption("OmniHistoryLineDiff") ~= nil then
-        micro.InfoBar():Error("OmniHistoryLineDiff is no longer used, use MicroOmni.HistoryLineDiff instead")
+        micro.InfoBar():Error(  "OmniHistoryLineDiff is no longer used, " .. 
+                                "use MicroOmni.HistoryLineDiff instead")
     end
 
     if config.GetGlobalOption("OmniHistoryTimeTravelMulti") ~= nil then
-        micro.InfoBar():Error("OmniHistoryTimeTravelMulti is no longer used, use MicroOmni.HistoryTimeTravelMulti instead")
+        micro.InfoBar():Error(  "OmniHistoryTimeTravelMulti is no longer used, " .. 
+                                "use MicroOmni.HistoryTimeTravelMulti instead")
     end
 
     if config.GetGlobalOption("OmniFzfCmd") ~= nil then
-        micro.InfoBar():Error("OmniFzfCmd is no longer used, use MicroOmni.FzfCmd instead")
+        micro.InfoBar():Error(  "OmniFzfCmd is no longer used, " .. 
+                                "use MicroOmni.FzfCmd instead")
     end
 
     if config.GetGlobalOption("OmniNewFileMethod") ~= nil then
-        micro.InfoBar():Error("OmniNewFileMethod is no longer used, use MicroOmni.NewFileMethod instead")
+        micro.InfoBar():Error(  "OmniNewFileMethod is no longer used, " .. 
+                                "use MicroOmni.NewFileMethod instead")
     end
 
     if config.GetGlobalOption("OmniMinimapMaxIndent") ~= nil then
-        micro.InfoBar():Error("OmniMinimapMaxIndent is no longer used, use MicroOmni.MinimapMaxIndent instead")
+        micro.InfoBar():Error(  "OmniMinimapMaxIndent is no longer used, " .. 
+                                "use MicroOmni.MinimapMaxIndent instead")
     end
 
     if config.GetGlobalOption("OmniMinimapContextNumLines") ~= nil then
-        micro.InfoBar():Error("OmniMinimapContextNumLines is no longer used, use MicroOmni.MinimapContextNumLines instead")
+        micro.InfoBar():Error(  "OmniMinimapContextNumLines is no longer used, " .. 
+                                "use MicroOmni.MinimapContextNumLines instead")
     end
 
     if config.GetGlobalOption("OmniMinimapMinDistance") ~= nil then
-        micro.InfoBar():Error("OmniMinimapMinDistance is no longer used, use MicroOmni.MinimapMinDistance instead")
+        micro.InfoBar():Error(  "OmniMinimapMinDistance is no longer used, " .. 
+                                "use MicroOmni.MinimapMinDistance instead")
     end
 
     if config.GetGlobalOption("OmniMinimapMaxColumns") ~= nil then
-        micro.InfoBar():Error("OmniMinimapMaxColumns is no longer used, use MicroOmni.MinimapMaxColumns instead")
+        micro.InfoBar():Error(  "OmniMinimapMaxColumns is no longer used, " .. 
+                                "use MicroOmni.MinimapMaxColumns instead")
     end
 
     if config.GetGlobalOption("OmniMinimapTargetNumLines") ~= nil then
-        micro.InfoBar():Error("OmniMinimapTargetNumLines is no longer used, use MicroOmni.MinimapTargetNumLines instead")
+        micro.InfoBar():Error(  "OmniMinimapTargetNumLines is no longer used, " .. 
+                                "use MicroOmni.MinimapTargetNumLines instead")
     end
 
     if config.GetGlobalOption("OmniMinimapScrollContent") ~= nil then
-        micro.InfoBar():Error("OmniMinimapScrollContent is no longer used, use MicroOmni.MinimapScrollContent instead")
+        micro.InfoBar():Error(  "OmniMinimapScrollContent is no longer used, " .. 
+                                "use MicroOmni.MinimapScrollContent instead")
     end
 end
 
