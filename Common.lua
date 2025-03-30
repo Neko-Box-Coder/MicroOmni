@@ -40,25 +40,31 @@ function Self.path_exists(path)
 end
 
 
-function Self.HandleOpenFile(path, bp, lineNum, gotoLineIfExists)
-    -- Turn to relative path if possible
+function Self.ToRelPath(path)
     local wd, err = os.Getwd()
+    local pathCopy = path
     if err == nil then
-        local relPath, relErr = filepath.Rel(wd, path)
+        local relPath, relErr = filepath.Rel(wd, pathCopy)
         if relErr == nil and relPath ~= nil then
-            path = relPath
+            return relPath
         end
     end
+    return pathCopy
+end
+
+function Self.HandleOpenFile(path, bp, lineNum, gotoLineIfExists)
+    -- Turn to relative path if possible
+    local maybeRelPath = Self.ToRelPath(path)
     
     if config.GetGlobalOption("MicroOmni.NewFileMethod") == "smart_newtab" then
-        Self.SmartNewTab(path, bp, lineNum, gotoLineIfExists)
+        Self.SmartNewTab(maybeRelPath, bp, lineNum, gotoLineIfExists)
         return
     end
 
     if config.GetGlobalOption("MicroOmni.NewFileMethod") == "newtab" then
-       bp:NewTabCmd({path})
+       bp:NewTabCmd({maybeRelPath})
     else
-        local buf, bufErr = buffer.NewBufferFromFile(path)
+        local buf, bufErr = buffer.NewBufferFromFile(maybeRelPath)
         if bufErr ~= nil then return end
         
         if config.GetGlobalOption("MicroOmni.NewFileMethod") == "vsplit" then

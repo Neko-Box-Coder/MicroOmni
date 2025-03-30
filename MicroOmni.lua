@@ -20,6 +20,7 @@ local WordJump = require("WordJump")
 local Highlight = require("Highlight")
 local Diff = require("Diff")
 local Minimap = require("Minimap")
+local Session = require("Session")
 
 -- See issue https://github.com/zyedidia/micro/issues/3320
 -- Modified from https://github.com/kaarrot/microgrep/blob/e1a32e8b95397a40e5dda0fb43e7f8d17469b88c/microgrep.lua#L118
@@ -278,6 +279,10 @@ local function InitializeSettings()
     config.RegisterCommonOption('MicroOmni', 'MinimapTargetNumLines', 100)
     config.RegisterCommonOption('MicroOmni', 'MinimapScrollContent', true)
     
+    config.RegisterCommonOption('MicroOmni', 'AutoSaveEnabled', true)
+    config.RegisterCommonOption('MicroOmni', 'AutoSaveToLocal', false)
+    config.RegisterCommonOption('MicroOmni', 'AutoSaveName', "autosave")
+    config.RegisterCommonOption('MicroOmni', 'AutoSaveInterval', 60)
     
     if config.GetGlobalOption("OmniGlobalSearchArgs") ~= nil then
         micro.InfoBar():Error(  "OmniGlobalSearchArgs is no longer used, " .. 
@@ -369,6 +374,9 @@ function onAnyEvent()
     end
     History.RecordCursorHistory()
     Minimap.UpdateMinimapView()
+    
+    -- Add auto-save check
+    Session.CheckAutoSave()
 end
 
 function init()
@@ -403,7 +411,17 @@ function init()
     
     config.MakeCommand("OmniTabSearch", Search.OmniTabSearch, config.NoComplete)
     
+    -- Session management commands
+    config.MakeCommand("OmniSaveSession", Session.SaveSession, config.NoComplete)
+    config.MakeCommand("OmniLoadSession", Session.LoadSession, Session.SessionCompleter)
+    config.MakeCommand("OmniListSessions", Session.ListSessions, config.NoComplete)
+    config.MakeCommand("OmniDeleteSession", Session.DeleteSession, Session.SessionCompleter)
     
+    -- Working directory session management commands
+    config.MakeCommand("OmniSaveSessionLocal", Session.SaveSessionLocal, config.NoComplete)
+    config.MakeCommand("OmniLoadSessionLocal", Session.LoadSessionLocal, Session.SessionCompleterLocal)
+    config.MakeCommand("OmniListSessionsLocal", Session.ListSessionsLocal, config.NoComplete)
+    config.MakeCommand("OmniDeleteSessionLocal", Session.DeleteSessionLocal, Session.SessionCompleterLocal)
     
     config.MakeCommand("OmniTest", OmniTest, TestCompleter)
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)

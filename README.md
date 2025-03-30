@@ -17,12 +17,12 @@ List of features:
     - [🗃️ Fuzzy Search For Opened Tabs](#%EF%B8%8F-fuzzy-search-for-opened-tabs)
     - [➕ Newtab Next To Current Tab](#-newtab-next-to-current-tab)
     - [↔️ Tab Bar Scrolling](#%EF%B8%8F-tab-bar-scrolling)
+    - [💾 Session Management](#-session-management)
 - 📜 Buffers Actions:
     - [🧦 Diff View](#-diff-view)
     - [🔦 Highlight Only (Before finding next)](#-highlight-only-before-finding-next)
     - [📁 Copy Current File Path](#-copy-current-file-path)
     - [🗺️ Minimap](#%EF%B8%8F-minimap)
-    - [💾 Session Management](#-session-management)
 - (WIP) Bracket jumping without on top of it
 - (WIP) Content selection within brackets
 - (WIP) Resize split with keyboard <!-- Using https://github.com/zyedidia/micro/issues/1807#issuecomment-1907899274 -->
@@ -352,6 +352,41 @@ Recommended binding:
 
 ---
 
+## 💾 Session Management
+
+You can save your current tabs and splits with session management as *.omnisession file
+Auto saving is also enabled as well.
+
+![Session Management Gif](./Resources/Session.gif)
+
+The following commands are available:
+
+- `OmniSaveSession <name>`: Saves the current session with the given name
+- `OmniLoadSession <name>`: Loads a previously saved session
+- `OmniListSessions`: Lists all available sessions
+- `OmniDeleteSession <name>`: Deletes a saved session
+
+Below works the same but on current working directory:
+
+- `OmniSaveSessionLocal <name>`
+- `OmniLoadSessionLocal <name>`
+- `OmniListSessionsLocal`
+- `OmniDeleteSessionLocal <name>`
+
+Recommended binding:
+
+None (Invoke it in command pane)
+
+### ⚙️ Session Settings
+
+- `MicroOmni.AutoSaveEnabled`: Enable session auto save or not. Defaults to true
+- `MicroOmni.AutoSaveToLocal`: Auto save to current working directory instead of plugin temporary 
+directory. Defaults to false
+- `MicroOmni.AutoSaveName`: Name of the auto save, defaults to `autosave`
+- `MicroOmni.AutoSaveInterval`: Auto save interval in seconds, defaults to 60
+
+---
+
 ## 🧦 Diff View
 To compare the current buffer with another buffer of file, launch the `OmniDiff` command.
 Buffers are not required to be saved in order to perform the diff.
@@ -418,3 +453,4 @@ By default it will show neighboring lines as "context" if they have the same ind
     - Defaults to 100
 - `MicroOmni.MinimapScrollContent`: Automatically scroll the content buffer when navigating in the minimap
     - Defaults to true
+
