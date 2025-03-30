@@ -72,10 +72,10 @@ function Self.RecordCursorHistory()
     local currentHistory = OmniCursorHistory[OmniCursorIndices.CurrentIndex]
 
     -- If difference is too less, then just leave it
-    local lineDiff = Common.OmniHistoryLineDiff
+    local lineDiff = config.GetGlobalOption("MicroOmni.HistoryLineDiff")
     local timeTravelling = false
     if OmniCursorIndices.CurrentIndex < OmniCursorIndices.EndIndex then
-        lineDiff = lineDiff * Common.OmniHistoryTimeTravelMulti
+        lineDiff = lineDiff * config.GetGlobalOption("MicroOmni.HistoryTimeTravelMulti")
         timeTravelling = true
     end
     

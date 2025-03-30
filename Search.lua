@@ -45,7 +45,7 @@ local function FindContent(str, searchLoc)
     local selectedText = str
     local fzfArgs
     -- micro.Log("selectedText before: ", selectedText)
-    -- micro.Log("Common.OmniContentArgs before: ", common.OmniContentArgs)
+    -- micro.Log("config.GetGlobalOption("MicroOmni.GlobalSearchArgs") before: ", config.GetGlobalOption("MicroOmni.GlobalSearchArgs"))
 
     local firstWord, _ = selectedText:match("^(.[^%s]*)%s-(.*)$")
 
@@ -59,14 +59,14 @@ local function FindContent(str, searchLoc)
     if currentOS == "Unix" then
         selectedText = selectedText:gsub("'", "'\\''")
         firstWord = firstWord:gsub("'", "'\\''")
-        fzfArgs = Common.OmniContentArgs:gsub("'", "'\\''")
-        finalCmd =  "rg --glob=!.git/ -F -i -uu -n '\\''"..firstWord.."'\\'' | "..Common.OmniFzfCmd.." "..fzfArgs..
+        fzfArgs = config.GetGlobalOption("MicroOmni.GlobalSearchArgs"):gsub("'", "'\\''")
+        finalCmd =  "rg --glob=!.git/ -F -i -uu -n '\\''"..firstWord.."'\\'' | "..config.GetGlobalOption("MicroOmni.FzfCmd").." "..fzfArgs..
                     " -q '\\''"..selectedText.."'\\''"
     else
         selectedText = selectedText:gsub("'", '"')
         firstWord = firstWord:gsub("'", '""')
-        fzfArgs = Common.OmniContentArgs:gsub("'", '"')
-        finalCmd =  "rg --glob=!.git/ -F -i -uu -n ^\""..firstWord.."^\" | "..Common.OmniFzfCmd.." "..fzfArgs..
+        fzfArgs = config.GetGlobalOption("MicroOmni.GlobalSearchArgs"):gsub("'", '"')
+        finalCmd =  "rg --glob=!.git/ -F -i -uu -n ^\""..firstWord.."^\" | "..config.GetGlobalOption("MicroOmni.FzfCmd").." "..fzfArgs..
                     " -q \""..selectedText.."\""
     end
 
@@ -158,13 +158,13 @@ end
 -- end
 
 function Self.OmniLocalSearch(bp, args)
-    local localSearchArgs = Common.OmniLocalSearchArgs:gsub("{filePath}", "\""..bp.buf.AbsPath.."\"")
+    local localSearchArgs = config.GetGlobalOption("MicroOmni.LocalSearchArgs"):gsub("{filePath}", "\""..bp.buf.AbsPath.."\"")
 
     if bp.Cursor:HasSelection() then
         localSearchArgs = localSearchArgs.." -q '"..util.String(bp.Cursor:GetSelection()).."'"
     end
 
-    local output, err = shell.RunInteractiveShell(Common.OmniFzfCmd.." "..localSearchArgs, false, true)
+    local output, err = shell.RunInteractiveShell(config.GetGlobalOption("MicroOmni.FzfCmd").." "..localSearchArgs, false, true)
 
     -- -- Test code for running fzf in term pane, but it has no color :/
     -- local buf, bufErr = buffer.NewBuffer("", "")
@@ -174,7 +174,7 @@ function Self.OmniLocalSearch(bp, args)
     -- end
     -- local splitBp = bp:VSplitIndex(buf, true)
     -- shell.RunTermEmulator(splitBp, 
-    --                     -- Common.OmniFzfCmd.." "..localSearchArgs, 
+    --                     -- config.GetGlobalOption("MicroOmni.FzfCmd").." "..localSearchArgs, 
     --                     "fzf", false, true,
     --                    TermTest, {splitBp})
     --                    -- callback func(out string, userargs []interface{}),
@@ -201,12 +201,12 @@ end
 
 
 function Self.OmniGotoFile(bp)
-    local localGotoFileArgs = Common.OmniGotoFileArgs
+    local localGotoFileArgs = config.GetGlobalOption("MicroOmni.GotoFileArgs")
     if bp.Cursor:HasSelection() then
         localGotoFileArgs = localGotoFileArgs.." -q '"..util.String(bp.Cursor:GetSelection()).."'"
     end
 
-    local output, err = shell.RunInteractiveShell(Common.OmniFzfCmd.." "..localGotoFileArgs, false, true)
+    local output, err = shell.RunInteractiveShell(config.GetGlobalOption("MicroOmni.FzfCmd").." "..localGotoFileArgs, false, true)
 
 
     if err ~= nil or output == "" then
@@ -254,9 +254,9 @@ function Self.OmniTabSearch(bp)
     local createdPath, success = 
         Common.CreateRuntimeFile("./temp/tabSearch.txt", buffersStr)
     
-    local fzfArgs = Common.OmniTabSearchArgs:gsub("{filePath}", "\""..createdPath.."\"")
+    local fzfArgs = config.GetGlobalOption("MicroOmni.TabSearchArgs"):gsub("{filePath}", "\""..createdPath.."\"")
     
-    local finalCmd =  Common.OmniFzfCmd.." "..fzfArgs
+    local finalCmd =  config.GetGlobalOption("MicroOmni.FzfCmd").." "..fzfArgs
     local output, err = shell.RunInteractiveShell(finalCmd, false, true)
     
     if err ~= nil then

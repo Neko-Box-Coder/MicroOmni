@@ -9,31 +9,6 @@ local filepath = import("path/filepath")
 
 local Self = {}
 
-Self.OmniContentArgs = config.GetGlobalOption("OmniGlobalSearchArgs")
-Self.OmniLocalSearchArgs = config.GetGlobalOption("OmniLocalSearchArgs")
-Self.OmniGotoFileArgs = config.GetGlobalOption("OmniGotoFileArgs")
-Self.OmniTabSearchArgs = config.GetGlobalOption("OmniTabSearchArgs")
-
-Self.OmniSelectType = config.GetGlobalOption("OmniSelectType")
-Self.OmniHistoryLineDiff = config.GetGlobalOption("OmniHistoryLineDiff")
-Self.OmniHistoryTimeTravelMulti = config.GetGlobalOption("OmniHistoryTimeTravelMulti")
-Self.OmniCanUseAddCursor = config.GetGlobalOption("OmniCanUseAddCursor")
-
--- TODO: Allow setting highlight to use regex or not
-
-Self.OmniFzfCmd = config.GetGlobalOption("OmniFzfCmd")
-Self.OmniNewFileMethod = config.GetGlobalOption("OmniNewFileMethod")
-
-
-Self.OmniMinimapMaxIndent = config.GetGlobalOption("OmniMinimapMaxIndent")
-Self.OmniMinimapContextNumLines = config.GetGlobalOption("OmniMinimapContextNumLines")
-Self.OmniMinimapMinDistance = config.GetGlobalOption("OmniMinimapMinDistance")
-Self.OmniMinimapMaxColumns = config.GetGlobalOption("OmniMinimapMaxColumns")
-Self.OmniMinimapTargetNumLines = config.GetGlobalOption("OmniMinimapTargetNumLines")
-Self.OmniMinimapScrollContent = config.GetGlobalOption("OmniMinimapScrollContent")
-
-
-
 function Self.IsPathDir(path)
     -- Stat the file/dir path we created
     -- file_stat should be non-nil, and stat_err should be nil on success
@@ -75,20 +50,20 @@ function Self.HandleOpenFile(path, bp, lineNum, gotoLineIfExists)
         end
     end
     
-    if Self.OmniNewFileMethod == "smart_newtab" then
+    if config.GetGlobalOption("MicroOmni.NewFileMethod") == "smart_newtab" then
         Self.SmartNewTab(path, bp, lineNum, gotoLineIfExists)
         return
     end
 
-    if Self.OmniNewFileMethod == "newtab" then
+    if config.GetGlobalOption("MicroOmni.NewFileMethod") == "newtab" then
        bp:NewTabCmd({path})
     else
         local buf, bufErr = buffer.NewBufferFromFile(path)
         if bufErr ~= nil then return end
         
-        if Self.OmniNewFileMethod == "vsplit" then
+        if config.GetGlobalOption("MicroOmni.NewFileMethod") == "vsplit" then
             bp:VSplitIndex(buf, true)
-        elseif Self.OmniNewFileMethod == "hsplit" then
+        elseif config.GetGlobalOption("MicroOmni.NewFileMethod") == "hsplit" then
             bp:HSplitIndex(buf, true)
         else
             bp:OpenBuffer(buf)

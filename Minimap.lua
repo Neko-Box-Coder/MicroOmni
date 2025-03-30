@@ -74,10 +74,10 @@ function Self.OmniMinimap(bp)
     local indentCount = {}
     
     -- Settings
-    local indentCutoff = Common.OmniMinimapMaxIndent
-    local showSubsequentLines = Common.OmniMinimapContextNumLines
-    local minDist = Common.OmniMinimapMinDistance
-    local minimapShowLength = Common.OmniMinimapMaxColumns
+    local indentCutoff = bp.Buf.Settings["MicroOmni.MinimapMaxIndent"]
+    local showSubsequentLines = bp.Buf.Settings["MicroOmni.MinimapContextNumLines"]
+    local minDist = bp.Buf.Settings["MicroOmni.MinimapMinDistance"]
+    local minimapColumnLength = bp.Buf.Settings["MicroOmni.MinimapMaxColumns"]
     
     -- States
     local lastIndent = 9999
@@ -132,6 +132,7 @@ function Self.OmniMinimap(bp)
                 -- micro.Log("indentCount[linesRecords[i].indentLevel]", indentCount[linesRecords[i].indentLevel])
             end
             
+            linesRecords[i].canOutput = canOutput
             forceOutput = false
         else
             subsequentLinesShowed = 0
@@ -143,7 +144,8 @@ function Self.OmniMinimap(bp)
     end
     
     -- Allocate number of lines each indent level can output to minimap
-    local minimapMaxLines = Common.OmniMinimapTargetNumLines
+    local minimapMaxLines = bp.Buf.Settings["MicroOmni.MinimapTargetNumLines"]
+    -- micro.InfoBar():Message("minimapMaxLines: ", minimapMaxLines)
     local indentBudget = {}
     local firstIndent = -1
     
@@ -178,101 +180,53 @@ function Self.OmniMinimap(bp)
         end
     end
     
-    -- States
-    -- This holds line numbers
-    local minimapRecords = {}
-    
-    local outputLines = {}
-    lastIndent = 9999
-    forceOutput = false
-    subsequentLinesShowed = 0
-    local lastShowedLine = -99
     
     -- Parse and output lines for minimap
+    local minimapLineNums = {}
+    local outputLines = {}
+    local lastShowedLine = -99
     for i = 0, numOfLines - 1 do
+        
         local curLineNum = i + 1
-        local curLineRecord = linesRecords[i]
-        
-        local skipFarEnough = false
-        local showFarEnough = false
-        
-        if  #minimapRecords == 0 or 
-            curLineNum - minimapRecords[#minimapRecords] > minDist then
-            
-            skipFarEnough = true
-        end
-        
-        if  #minimapRecords == 0 or 
-            curLineNum - lastShowedLine > minDist then
-            
-            showFarEnough = true
-        end
-        
-        local indentChange = false
-        if #minimapRecords == 0 or curLineRecord.indentLevel ~= lastIndent then
-            indentChange = true
-        end
-        
-        -- micro.Log(  "Line", curLineNum - 1, "farEnough:", farEnough, "indentChange", 
-        --             indentChange, "lastIndent", lastIndent, "forceOutput", forceOutput, 
-        --             "curLineRecord.indentLevel", curLineRecord.indentLevel,
-        --             "curLineRecord.isEmpty", curLineRecord.isEmpty)
-        
-        -- if indentBudget[curLineRecord.indentLevel] ~= nil then
-        --     micro.Log("indentBudget[", curLineRecord.indentLevel, "]:", indentBudget[curLineRecord.indentLevel])
-        -- end
-        
         local writeLine = false
         local writeSkip = false
         
         -- Write line to minimap
-        if  not curLineRecord.isEmpty and
-            indentBudget[curLineRecord.indentLevel] ~= nil and 
-            indentBudget[curLineRecord.indentLevel] > 0 then
+        if  linesRecords[i].canOutput and 
+            indentBudget[linesRecords[i].indentLevel] ~= nil and 
+            indentBudget[linesRecords[i].indentLevel] > 0 then
             
-            -- If last line has same indent level and within subsequent showable distance, show it
-            if  #minimapRecords ~= 0 and
-                curLineNum - minimapRecords[#minimapRecords] == 1 and 
-                not indentChange and 
-                subsequentLinesShowed < showSubsequentLines then
-                
-                subsequentLinesShowed = subsequentLinesShowed + 1
-                writeLine = true
-            else
-                subsequentLinesShowed = 0
-            end
-            
-            -- If we force output or it is far enough with change in indent, show it
-            if not writeLine and (forceOutput or (showFarEnough and indentChange)) then
-                writeLine = true
-                subsequentLinesShowed = 1
-            end
-        end
-        
+            indentBudget[linesRecords[i].indentLevel] = indentBudget[linesRecords[i].indentLevel] - 1
+            lastShowedLine = i
+            table.insert(minimapLineNums, curLineNum)
+            writeLine = true
         -- Write ... to minimap every certain distance
-        if not writeLine and skipFarEnough then
+        elseif i - lastShowedLine > minDist then
+            table.insert(minimapLineNums, curLineNum)
+            lastShowedLine = i
             writeSkip = true
         end
         
+        -- Actual writing
         if writeLine then
-            lastIndent = curLineRecord.indentLevel
-            lastShowedLine = curLineNum
             local currentLineBytes = bp.Buf:LineBytes(curLineNum - 1)
             local currentLineStr = util.String(currentLineBytes)
             -- micro.Log("currentLineStr[", curLineNum, "]:", currentLineStr)
             -- currentLineStr = string.gsub(currentLineStr, "[\n\r]", "")
-            if #currentLineStr > minimapShowLength then
+            if #currentLineStr > minimapColumnLength then
                 table.insert(   outputLines, 
                                 string.format(  "%-5d %s", 
                                                 curLineNum, 
-                                                currentLineStr:sub(1, minimapShowLength).."..."))
+                                                currentLineStr:sub(1, minimapColumnLength).."..."))
             else
                 table.insert(outputLines, string.format("%-5d %s", curLineNum, currentLineStr))
             end
             
+            -- Remove \" and \'
             local processedLine, _ = string.gsub(outputLines[#outputLines], "\\\"", "")
             processedLine, _ = string.gsub(processedLine, "\\\'", "")
             
+            -- Wrap ", ', /*
             local _, doubleQuoteCount = string.gsub(processedLine, "\"", "")
             local _, singleQuoteCount = string.gsub(processedLine, "\'", "")
             local _, blockCommentCount = string.gsub(processedLine, "/%*", "")
@@ -290,20 +244,23 @@ function Self.OmniMinimap(bp)
             if #appends ~= 0 then
                 outputLines[#outputLines] = outputLines[#outputLines]..appends
             end
-            
-            indentBudget[curLineRecord.indentLevel] = indentBudget[curLineRecord.indentLevel] - 1
-            table.insert(minimapRecords, curLineNum)
         elseif writeSkip then
             table.insert(outputLines, string.format("%-5d %s", curLineNum, "..."))
-            table.insert(minimapRecords, curLineNum)
-        end
-        
-        forceOutput = false
-        -- If it is an empty line, we force minimap output next time
-        if curLineRecord.isEmpty then
-            forceOutput = true
+            
+            -- outputLines[#outputLines] = outputLines[#outputLines] .. tostring(linesRecords[i].canOutput) .. ", " ..
+            --     tostring(indentBudget[linesRecords[i].indentLevel]) .. ", " .. tostring(linesRecords[i].indentLevel)
         end
     end
+    
+    -- for i = 0, indentCutoff do
+    --     table.insert(outputLines, "i: " .. tostring(i))
+    --     if indentCount[i] ~= nil then
+    --         table.insert(outputLines, "indentCount[" .. tostring(i) .. "]: " .. tostring(indentCount[i]))
+    --     end
+    --     if indentBudget[i] ~= nil then
+    --         table.insert(outputLines, "indentBudget[" .. tostring(i) .. "]: " .. tostring(indentBudget[i]))
+    --     end
+    -- end
     
     -- Output minimap
     local minimapBuf, err = buffer.NewBuffer(table.concat(outputLines, "\n"), "minimap"..#OmniMinimapTargetPanes)
@@ -319,7 +276,7 @@ function Self.OmniMinimap(bp)
     
     table.insert(OmniMinimapTargetPanes, bp)
     table.insert(OmniMinimapPanes, minimapPane)
-    table.insert(OmniMinimapRecords, minimapRecords)
+    table.insert(OmniMinimapRecords, minimapLineNums)
     
     minimapPane:SetLocalCmd({"filetype", bp.Buf.Settings["filetype"]})
     
@@ -386,7 +343,7 @@ function Self.UpdateMinimapView()
         end
     end
     
-    if Common.OmniMinimapScrollContent == false then
+    if config.GetGlobalOption("MicroOmni.MinimapScrollContent") == false then
         return
     end
     

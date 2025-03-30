@@ -56,17 +56,13 @@ local function OmniSelect(bp, args)
     local cursor = buf:GetActiveCursor()
     local targetLine = cursor.Loc.Y
 
-    if Common.OmniSelectType == nil or Common.OmniSelectType == "" then
-        Common.OmniSelectType = "relative"
-    end
-
     local selectLineCount = tonumber(args[1])
     if selectLineCount == nil then
         micro.InfoBar():Error(args[1].." is not a valid target selection line")
         return
     end
 
-    if Common.OmniSelectType == "relative" then
+    if config.GetGlobalOption("MicroOmni.SelectType") == "relative" then
         targetLine = targetLine + selectLineCount
     else
         targetLine = selectLineCount - 1
@@ -224,87 +220,7 @@ local function OmniNewTabLeft(bp)
 end
 
 local function InitializeSettings()
-    -- Convert history line diff to integer in the beginning
-    if Common.OmniHistoryLineDiff == nil or Common.OmniHistoryLineDiff == "" then
-        Common.OmniHistoryLineDiff = 5
-    else
-        Common.OmniHistoryLineDiff = tonumber(Common.OmniHistoryLineDiff)
-        if Common.OmniHistoryLineDiff == nil then
-            Common.OmniHistoryLineDiff = 5
-        end
-    end
-    
-    if Common.OmniHistoryTimeTravelMulti == nil or Common.OmniHistoryTimeTravelMulti == "" then
-        Common.OmniHistoryTimeTravelMulti = 5
-    else
-        Common.OmniHistoryTimeTravelMulti = tonumber(Common.OmniHistoryTimeTravelMulti)
-        if Common.OmniHistoryTimeTravelMulti == nil then
-            Common.OmniHistoryTimeTravelMulti = 5
-        end
-    end
-    
-    if Common.OmniCanUseAddCursor == nil then
-        Common.OmniCanUseAddCursor = false
-    end
-    
-    if Common.OmniMinimapScrollContent == nil then
-        Common.OmniMinimapScrollContent = true
-    -- elseif Common.OmniMinimapScrollContent == "true" then
-    --     Common.OmniMinimapScrollContent = true
-    -- elseif Common.OmniMinimapScrollContent == "false" then
-    --     Common.OmniMinimapScrollContent = false
-    elseif Common.OmniMinimapScrollContent ~= true and Common.OmniMinimapScrollContent ~= false then
-        micro.Log("Invalid value for OmniMinimapScrollContent:", Common.OmniMinimapScrollContent)
-        micro.InfoBar():Error("Invalid value for OmniMinimapScrollContent:", Common.OmniMinimapScrollContent)
-    end
-
-    if Common.OmniMinimapMaxIndent == nil then
-        Common.OmniMinimapMaxIndent = 5
-    else
-        Common.OmniMinimapMaxIndent = tonumber(Common.OmniMinimapMaxIndent)
-        if Common.OmniMinimapMaxIndent == nil then
-            Common.OmniMinimapMaxIndent = 5
-        end
-    end
-
-    if Common.OmniMinimapContextNumLines == nil then
-        Common.OmniMinimapContextNumLines = 20
-    else
-        Common.OmniMinimapContextNumLines = tonumber(Common.OmniMinimapContextNumLines)
-        if Common.OmniMinimapContextNumLines == nil then
-            Common.OmniMinimapContextNumLines = 20
-        end
-    end
-    
-    if Common.OmniMinimapMinDistance == nil then
-        Common.OmniMinimapMinDistance = 20
-    else
-        Common.OmniMinimapMinDistance = tonumber(Common.OmniMinimapMinDistance)
-        if Common.OmniMinimapMinDistance == nil then
-            Common.OmniMinimapMinDistance = 20
-        end
-    end
-    
-    if Common.OmniMinimapMaxColumns == nil then
-        Common.OmniMinimapMaxColumns = 75
-    else
-        Common.OmniMinimapMaxColumns = tonumber(Common.OmniMinimapMaxColumns)
-        if Common.OmniMinimapMaxColumns == nil then
-            Common.OmniMinimapMaxColumns = 75
-        end
-    end
-    
-    if Common.OmniMinimapTargetNumLines == nil then
-        Common.OmniMinimapTargetNumLines = 100
-    else
-        Common.OmniMinimapTargetNumLines = tonumber(Common.OmniMinimapTargetNumLines)
-        if Common.OmniMinimapTargetNumLines == nil then
-            Common.OmniMinimapTargetNumLines = 100
-        end
-    end
-
-    if Common.OmniContentArgs == nil or Common.OmniContentArgs == "" then
-        Common.OmniContentArgs =
+    config.RegisterCommonOption('MicroOmni', 'GlobalSearchArgs', 
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
             "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
             "--bind 'alt-f:reload:rg --glob=!.git/ -i -F -uu -n {q}' "..
@@ -313,23 +229,9 @@ local function InitializeSettings()
             "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
             "--bind 'alt-enter:change-multi+select-all+accept' "..
             "--preview-window 'down,+{2}-/2' "..
-            "--preview 'bat -f -n --highlight-line {2} {1}'"
-    end
-
-    if Common.OmniGotoFileArgs == nil or Common.OmniGotoFileArgs == "" then
-        Common.OmniGotoFileArgs = 
-            "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
-            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
-            "-i --reverse "..
-            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
-            "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
-            "--bind 'alt-enter:change-multi+select-all+accept' "..
-            "--preview-window 'down' "..
-            "--preview 'bat -f -n {}'"
-    end
-
-    if Common.OmniLocalSearchArgs == nil or Common.OmniLocalSearchArgs == "" then
-        Common.OmniLocalSearchArgs =
+            "--preview 'bat -f -n --highlight-line {2} {1}'")
+    
+    config.RegisterCommonOption('MicroOmni', 'LocalSearchArgs', 
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
             "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
             "--bind 'start:reload:bat -n --decorations always {filePath}' "..
@@ -338,11 +240,19 @@ local function InitializeSettings()
             "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
             "--bind 'alt-enter:change-multi+select-all+accept' "..
             "--preview-window 'down,+{1}-/2' "..
-            "--preview 'bat -f -n --highlight-line {1} {filePath}'"
-    end
+            "--preview 'bat -f -n --highlight-line {1} {filePath}'")
     
-    if Common.OmniTabSearchArgs == nil or Common.OmniTabSearchArgs == "" then 
-        Common.OmniTabSearchArgs = 
+    config.RegisterCommonOption('MicroOmni', 'GotoFileArgs', 
+            "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
+            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
+            "-i --reverse "..
+            "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
+            "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
+            "--bind 'alt-enter:change-multi+select-all+accept' "..
+            "--preview-window 'down' "..
+            "--preview 'bat -f -n {}'")
+    
+    config.RegisterCommonOption('MicroOmni', 'TabSearchArgs', 
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
             "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
             "--bind 'start:reload:bat {filePath}' "..
@@ -351,15 +261,82 @@ local function InitializeSettings()
             "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
             "--bind 'alt-enter:change-multi+select-all+accept' "..
             "--preview-window 'down,+{2}-/2' "..
-            "--preview 'bat -f -n --highlight-line {2} {1}'"
+            "--preview 'bat -f -n --highlight-line {2} {1}'")
+    
+    config.RegisterCommonOption('MicroOmni', 'SelectType', "relative")
+    config.RegisterCommonOption('MicroOmni', 'HistoryLineDiff', 5)
+    config.RegisterCommonOption('MicroOmni', 'HistoryTimeTravelMulti', 5)
+    config.RegisterCommonOption('MicroOmni', 'CanUseAddCursor', false)
+
+    config.RegisterCommonOption('MicroOmni', 'FzfCmd', 'fzf')
+    config.RegisterCommonOption('MicroOmni', 'NewFileMethod', 'smart_newtab')
+
+    config.RegisterCommonOption('MicroOmni', 'MinimapMaxIndent', 5)
+    config.RegisterCommonOption('MicroOmni', 'MinimapContextNumLines', 20)
+    config.RegisterCommonOption('MicroOmni', 'MinimapMinDistance', 20)
+    config.RegisterCommonOption('MicroOmni', 'MinimapMaxColumns', 75)
+    config.RegisterCommonOption('MicroOmni', 'MinimapTargetNumLines', 100)
+    config.RegisterCommonOption('MicroOmni', 'MinimapScrollContent', true)
+    
+    
+    if config.GetGlobalOption("OmniGlobalSearchArgs") ~= nil then
+        micro.InfoBar():Error("OmniGlobalSearchArgs is no longer used, use MicroOmni.GlobalSearchArgs instead")
     end
 
-    if Common.OmniFzfCmd == nil then
-        Common.OmniFzfCmd = "fzf"
+    if config.GetGlobalOption("OmniLocalSearchArgs") ~= nil then
+        micro.InfoBar():Error("OmniLocalSearchArgs is no longer used, use MicroOmni.LocalSearchArgs instead")
     end
 
-    if Common.OmniNewFileMethod == nil then
-        Common.OmniNewFileMethod = "smart_newtab"
+    if config.GetGlobalOption("OmniGotoFileArgs") ~= nil then
+        micro.InfoBar():Error("OmniGotoFileArgs is no longer used, use MicroOmni.GotoFileArgs instead")
+    end
+
+    if config.GetGlobalOption("OmniTabSearchArgs") ~= nil then
+        micro.InfoBar():Error("OmniTabSearchArgs is no longer used, use MicroOmni.TabSearchArgs instead")
+    end
+
+    if config.GetGlobalOption("OmniSelectType") ~= nil then
+        micro.InfoBar():Error("OmniSelectType is no longer used, use MicroOmni.SelectType instead")
+    end
+
+    if config.GetGlobalOption("OmniHistoryLineDiff") ~= nil then
+        micro.InfoBar():Error("OmniHistoryLineDiff is no longer used, use MicroOmni.HistoryLineDiff instead")
+    end
+
+    if config.GetGlobalOption("OmniHistoryTimeTravelMulti") ~= nil then
+        micro.InfoBar():Error("OmniHistoryTimeTravelMulti is no longer used, use MicroOmni.HistoryTimeTravelMulti instead")
+    end
+
+    if config.GetGlobalOption("OmniFzfCmd") ~= nil then
+        micro.InfoBar():Error("OmniFzfCmd is no longer used, use MicroOmni.FzfCmd instead")
+    end
+
+    if config.GetGlobalOption("OmniNewFileMethod") ~= nil then
+        micro.InfoBar():Error("OmniNewFileMethod is no longer used, use MicroOmni.NewFileMethod instead")
+    end
+
+    if config.GetGlobalOption("OmniMinimapMaxIndent") ~= nil then
+        micro.InfoBar():Error("OmniMinimapMaxIndent is no longer used, use MicroOmni.MinimapMaxIndent instead")
+    end
+
+    if config.GetGlobalOption("OmniMinimapContextNumLines") ~= nil then
+        micro.InfoBar():Error("OmniMinimapContextNumLines is no longer used, use MicroOmni.MinimapContextNumLines instead")
+    end
+
+    if config.GetGlobalOption("OmniMinimapMinDistance") ~= nil then
+        micro.InfoBar():Error("OmniMinimapMinDistance is no longer used, use MicroOmni.MinimapMinDistance instead")
+    end
+
+    if config.GetGlobalOption("OmniMinimapMaxColumns") ~= nil then
+        micro.InfoBar():Error("OmniMinimapMaxColumns is no longer used, use MicroOmni.MinimapMaxColumns instead")
+    end
+
+    if config.GetGlobalOption("OmniMinimapTargetNumLines") ~= nil then
+        micro.InfoBar():Error("OmniMinimapTargetNumLines is no longer used, use MicroOmni.MinimapTargetNumLines instead")
+    end
+
+    if config.GetGlobalOption("OmniMinimapScrollContent") ~= nil then
+        micro.InfoBar():Error("OmniMinimapScrollContent is no longer used, use MicroOmni.MinimapScrollContent instead")
     end
 end
 
@@ -422,7 +399,7 @@ function init()
 
     -- Check commands
     local missingCommands = {}
-    if not CheckCommand(Common.OmniFzfCmd.." --version") then
+    if not CheckCommand(config.GetGlobalOption("MicroOmni.FzfCmd").." --version") then
         missingCommands[#missingCommands + 1] = "fzf"
     end
     
