@@ -22,6 +22,7 @@ List of features:
     - [🔦 Highlight Only (Before finding next)](#-highlight-only-before-finding-next)
     - [📁 Copy Current File Path](#-copy-current-file-path)
     - [🗺️ Minimap](#%EF%B8%8F-minimap)
+    - [💾 Session Management](#-session-management)
 - (WIP) Bracket jumping without on top of it
 - (WIP) Content selection within brackets
 - (WIP) Resize split with keyboard <!-- Using https://github.com/zyedidia/micro/issues/1807#issuecomment-1907899274 -->
@@ -103,15 +104,15 @@ To find a with keyword(s), launch command `OmniGlobalSearch` which is bindable t
     - **alt-q**: Abort
 
 ### ⚙️ Fuzzy Search Settings
-- `OmniFzfCmd`: The `fzf` location.
+- `MicroOmni.FzfCmd`: The `fzf` location.
     - Defaults to `"fzf"`
-- `OmniNewFileMethod`: How to open the new file. Available options are:
+- `MicroOmni.NewFileMethod`: How to open the new file. Available options are:
     - `smart_newtab`: (Default) Opens the new file in newtab if not opened already
     - `thispane`: Opens in current pane
     - `newtab`: Opens in new tab
     - `vsplit`: Opens in new pane as vertical split
     - `hsplit`: Opens in new pane as horizontal split
-- `OmniGlobalSearchArgs`: Argument to be passed to fzf. It defaults to the following:
+- `MicroOmni.GlobalSearchArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
 Common.OmniContentArgs =
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
@@ -144,7 +145,7 @@ The default control is the same as "Fuzzy Search For Text Globally".
 To search, simply launch the `OmniLocalSearch` command.
 
 ### ⚙️ Fuzzy Search Settings
-- `OmniLocalSearchArgs`: Argument to be passed to fzf with `{filePath}` substitute with 
+- `MicroOmni.LocalSearchArgs`: Argument to be passed to fzf with `{filePath}` substitute with 
 the current file path. It defaults to the following:
 ```lua
 Common.OmniLocalSearchArgs =
@@ -178,8 +179,8 @@ The default control is the same as "Fuzzy Search For Text Globally".
 To search, simply launch the `OmniGotoFile` command.
 
 ### ⚙️ Fuzzy Search Settings
-- `OmniNewFileMethod`: Same as previous
-- `OmniGotoFileArgs`: Argument to be passed to fzf. It defaults to the following:
+- `MicroOmni.NewFileMethod`: Same as previous
+- `MicroOmni.GotoFileArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
 Common.OmniGotoFileArgs = 
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
@@ -221,9 +222,9 @@ Recommended binding:
 ```
 
 ### ⚙️ Global Cursor History Settings
-- `OmniNewFileMethod`: Same as previous
-- `OmniHistoryLineDiff`: Sets how many line difference count as new cursor history. Defaults to 5
-- `OmniHistoryTimeTravelMulti`: Multiplier to `OmniHistoryLineDiff` when in cursor history
+- `MicroOmni.NewFileMethod`: Same as previous
+- `MicroOmni.HistoryLineDiff`: Sets how many line difference count as new cursor history. Defaults to 5
+- `MicroOmni.HistoryTimeTravelMulti`: Multiplier to `OmniHistoryLineDiff` when in cursor history
 
 ---
 
@@ -255,7 +256,7 @@ By default it uses relative line numbers, so 5 is 5 lines down and -5 is 5 lines
 This can be configured to use absolute line number. See settings.
 
 ### ⚙️ Jump Selection Type Settings
-- `OmniSelectType`: Sets the jump selection type. Can either be `relative` (default) or `absolute`
+- `MicroOmni.SelectType`: Sets the jump selection type. Can either be `relative` (default) or `absolute`
 
 ---
 
@@ -280,12 +281,12 @@ Therefore, a workaround was created to add multi cursor but this doesn't behave 
 The differences are that `AddCursor()` will **select** the highlight text but the workaround will 
 simply just add the cursor to the end of the highlight.
 
-This can be set with `OmniCanUseNewCursor`.
+This can be set with `OmniCanUseAddCursor`.
 
 If you are on latest master or using [my fork](https://github.com/Neko-Box-Coder/micro-dev/actions)
 you can safely turn `OmniCanUseAddCursor` on, otherwise just leave it because it can crash micro.
 
-- `OmniCanUseAddCursor`: Sets if MicroOmni can use the `AddCursor()` interface or not.
+- `MicroOmni.CanUseAddCursor`: Sets if MicroOmni can use the `AddCursor()` interface or not.
     - Defaults to `false`
 
 ---
@@ -307,8 +308,8 @@ The default control is the same as "Fuzzy Search For Text Globally".
 To search, simply launch the `OmniTabSearch` command.
 
 ### ⚙️ Fuzzy Search Settings
-- `OmniNewFileMethod`: Same as previous
-- `OmniTabSearchArgs`: Argument to be passed to fzf. It defaults to the following:
+- `MicroOmni.NewFileMethod`: Same as previous
+- `MicroOmni.TabSearchArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
 Common.OmniTabSearchArgs = 
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
@@ -405,15 +406,15 @@ To see an overview of the current file based on indentation, launch the `OmniMin
 By default it will show neighboring lines as "context" if they have the same indentations
 
 ### ⚙️ Minimap Settings
-- `OmniMinimapMaxIndent`: Max indent limit to be shown in the minimap
+- `MicroOmni.MinimapMaxIndent`: Max indent limit to be shown in the minimap
     - Defaults to 5
-- `OmniMinimapContextNumLines`: Max number of context lines
+- `MicroOmni.MinimapContextNumLines`: Max number of context lines
     - Defaults to 20
-- `OmniMinimapMinDistance`: Min skipping distance for the minimap
+- `MicroOmni.MinimapMinDistance`: Min skipping distance for the minimap
     - Defaults to 20
-- `OmniMinimapMaxColumns`: Max number of columns in minimap, and use "..." if doesn't fit
+- `MicroOmni.MinimapMaxColumns`: Max number of columns in minimap, and use "..." if doesn't fit
     - Defaults to 75
-- `OmniMinimapTargetNumLines`: Number of lines aiming to have for the minimap
+- `MicroOmni.MinimapTargetNumLines`: Number of lines aiming to have for the minimap
     - Defaults to 100
-- `OmniMinimapScrollContent`: Automatically scroll the content buffer when navigating in the minimap
+- `MicroOmni.MinimapScrollContent`: Automatically scroll the content buffer when navigating in the minimap
     - Defaults to true
