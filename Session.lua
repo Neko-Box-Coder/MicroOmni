@@ -52,7 +52,7 @@ local function listSessions(useWorkingDir)
         for i = 1, #files do
             local fileName = files[i]:Name()
             if string.match(fileName, "%.omnisession$") then
-                table.insert(sessions, string.sub(fileName, 1, -9)) -- remove .session extension
+                table.insert(sessions, string.sub(fileName, 1, -13)) -- remove .omnisession extension
             end
         end
     else
@@ -72,7 +72,7 @@ local function listSessions(useWorkingDir)
         for i = 1, #files do
             local fileName = files[i]:Name()
             if string.match(fileName, "%.omnisession$") then
-                table.insert(sessions, string.sub(fileName, 1, -9)) -- remove .session extension
+                table.insert(sessions, string.sub(fileName, 1, -13)) -- remove .omnisession extension
             end
         end
     end
@@ -384,7 +384,7 @@ function Session.CheckAutoSave()
     if lastRunTimeDiff >= config.GetGlobalOption("MicroOmni.AutoSaveInterval") then
         lastAutoSaveTime = currentTime
         if config.GetGlobalOption("MicroOmni.AutoSaveToLocal") then
-            Session.SaveSessionCWD(micro.CurPane(), {config.GetGlobalOption("MicroOmni.AutoSaveName")})
+            Session.SaveSessionLocal(micro.CurPane(), {config.GetGlobalOption("MicroOmni.AutoSaveName")})
         else
             Session.SaveSession(micro.CurPane(), {config.GetGlobalOption("MicroOmni.AutoSaveName")})
         end

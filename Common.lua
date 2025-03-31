@@ -127,8 +127,14 @@ function Self.SmartNewTab(path, bp, lineNum, gotoLineIfExists)
     local cleanFilepath = filepath.Clean(path)
     -- micro.Log("cleanFilepath:", cleanFilepath)
     
+    -- micro.Log("path:", path)
+    -- micro.Log("cleanFilepath:", cleanFilepath)
+    
+    -- micro.Log("micro.CurPane().Buf.AbsPath:", micro.CurPane().Buf.AbsPath)
+    
     -- If current pane is empty, we can open in it
     if not Self.path_exists(micro.CurPane().Buf.AbsPath) or Self.IsPathDir(micro.CurPane().Buf.AbsPath) then
+        -- micro.Log("#micro.CurPane().Buf:Bytes():", #micro.CurPane().Buf:Bytes())
         if #micro.CurPane().Buf:Bytes() == 0 then
             bp:OpenCmd({cleanFilepath})
             micro.CurPane():GotoCmd({lineNum})
