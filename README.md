@@ -114,7 +114,7 @@ To find a with keyword(s), launch command `OmniGlobalSearch` which is bindable t
     - `hsplit`: Opens in new pane as horizontal split
 - `MicroOmni.GlobalSearchArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
-Common.OmniContentArgs =
+    config.RegisterCommonOption('MicroOmni', 'GlobalSearchArgs', 
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
             "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
             "--bind 'alt-f:reload:rg --glob=!.git/ -i -F -uu -n {q}' "..
@@ -123,7 +123,7 @@ Common.OmniContentArgs =
             "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
             "--bind 'alt-enter:change-multi+select-all+accept' "..
             "--preview-window 'down,+{2}-/2' "..
-            "--preview 'bat -f -n --highlight-line {2} {1}'"
+            "--preview 'bat -f -n --highlight-line {2} {1}'")
 ```
 
 ---
@@ -148,7 +148,7 @@ To search, simply launch the `OmniLocalSearch` command.
 - `MicroOmni.LocalSearchArgs`: Argument to be passed to fzf with `{filePath}` substitute with 
 the current file path. It defaults to the following:
 ```lua
-Common.OmniLocalSearchArgs =
+    config.RegisterCommonOption('MicroOmni', 'LocalSearchArgs', 
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
             "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
             "--bind 'start:reload:bat -n --decorations always {filePath}' "..
@@ -157,7 +157,7 @@ Common.OmniLocalSearchArgs =
             "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
             "--bind 'alt-enter:change-multi+select-all+accept' "..
             "--preview-window 'down,+{1}-/2' "..
-            "--preview 'bat -f -n --highlight-line {1} {filePath}'"
+            "--preview 'bat -f -n --highlight-line {1} {filePath}'")
 ```
 
 ---
@@ -182,7 +182,7 @@ To search, simply launch the `OmniGotoFile` command.
 - `MicroOmni.NewFileMethod`: Same as previous
 - `MicroOmni.GotoFileArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
-Common.OmniGotoFileArgs = 
+    config.RegisterCommonOption('MicroOmni', 'GotoFileArgs', 
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
             "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
             "-i --reverse "..
@@ -190,7 +190,8 @@ Common.OmniGotoFileArgs =
             "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
             "--bind 'alt-enter:change-multi+select-all+accept' "..
             "--preview-window 'down' "..
-            "--preview 'bat -f -n {}'"```
+            "--preview 'bat -f -n {}'")
+```
 
 ## 🚀 Word Jumping (EasyMotion)
 To jump to a word anywhere on the screen, launch the `OmniJump` command **WITH** a keybinding
@@ -311,7 +312,7 @@ To search, simply launch the `OmniTabSearch` command.
 - `MicroOmni.NewFileMethod`: Same as previous
 - `MicroOmni.TabSearchArgs`: Argument to be passed to fzf. It defaults to the following:
 ```lua
-Common.OmniTabSearchArgs = 
+    config.RegisterCommonOption('MicroOmni', 'TabSearchArgs', 
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
             "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
             "--bind 'start:reload:bat {filePath}' "..
@@ -320,7 +321,7 @@ Common.OmniTabSearchArgs =
             "alt-up:half-page-up,alt-down:half-page-down,alt-q:abort "..
             "--bind 'alt-enter:change-multi+select-all+accept' "..
             "--preview-window 'down,+{2}-/2' "..
-            "--preview 'bat -f -n --highlight-line {2} {1}'"
+            "--preview 'bat -f -n --highlight-line {2} {1}'")
 ```
 
 ---
