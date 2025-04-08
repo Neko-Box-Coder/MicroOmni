@@ -202,7 +202,7 @@ function Session.LoadSession(bp, args, useWorkingDir)
         
         for fileData in string.gmatch(line, "[^,]+") do
             -- Parse file path and line number
-            local filePath, lineNum = string.match(fileData, "([^:]+):(%d+)")
+            local filePath, lineNum = string.match(fileData, "(.+):(%d+)")
             
             if filePath == nil then
                 -- No line number in the file data

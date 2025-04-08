@@ -44,6 +44,8 @@ function Self.ToRelPath(path)
     local wd, err = os.Getwd()
     local pathCopy = path
     if err == nil then
+        pathCopy = filepath.Clean(pathCopy)
+        wd = filepath.Clean(wd)
         local relPath, relErr = filepath.Rel(wd, pathCopy)
         if relErr == nil and relPath ~= nil then
             return relPath
