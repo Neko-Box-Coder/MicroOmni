@@ -2,6 +2,7 @@ local micro = import("micro")
 local config = import("micro/config")
 local util = import("micro/util")
 local buffer = import("micro/buffer")
+local strings = import("strings")
 
 local fmt = import('fmt')
 package.path = fmt.Sprintf('%s;%s/plug/MicroOmni/?.lua', package.path, config.ConfigDir)
@@ -263,8 +264,13 @@ function Self.OmniMinimap(bp)
     -- end
     
     -- Output minimap
-    local minimapBuf, err = buffer.NewBuffer(table.concat(outputLines, "\n"), "minimap"..#OmniMinimapTargetPanes)
-    
+    local outputStr = util.String({})
+    for i, line in ipairs(outputLines) do
+        local currentLineBytes = { string.byte(line .. "\n", 1, -1) }
+        local currentLineStr = util.String(currentLineBytes)
+        outputStr = strings.Join({outputStr, currentLineStr}, "")
+    end
+    local minimapBuf, err = buffer.NewBuffer(outputStr, "minimap"..#OmniMinimapTargetPanes)
     if err ~= nil then 
         micro.InfoBar():Error(err)
         return
