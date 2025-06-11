@@ -379,7 +379,7 @@ function onAnyEvent()
     Session.CheckAutoSave()
 end
 
-function init()
+function preinit()
     config.MakeCommand("OmniGlobalSearch", Search.OmniContent, config.NoComplete)
     config.MakeCommand("OmniLocalSearch", Search.OmniLocalSearch, config.NoComplete)
     config.MakeCommand("OmniGotoFile", Search.OmniGotoFile, config.NoComplete)
