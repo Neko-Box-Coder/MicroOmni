@@ -51,7 +51,7 @@ You can install MicroOmni using `micro -plugin install OmniMicro` by either
 ## 📐 Requirements
 - micro
     - micro [v2.0.14](https://github.com/zyedidia/micro/releases/tag/v2.0.14)
-    - [Or my custom build of micro (dev)](https://github.com/Neko-Box-Coder/micro-dev/actions)
+    - [Or my custom build of micro (dev)](https://github.com/Neko-Box-Coder/micro-dev/releases/tag/nightly)
 - fzf
 - ripgrep
 - bat
