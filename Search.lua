@@ -52,21 +52,51 @@ local function FindContent(str, searchLoc)
         micro.InfoBar():Error("Failed to extract first word... str: ", str)
         return
     end
-
+    
+    local locations = {}
+    for s in string.gmatch(searchLoc, "[^,]+") do
+        s = string.gsub(s, '^%s*(.-)%s*$', '%1') -- Trim spaces
+        table.insert(locations, s)
+    end
+    
     local currentOS = getOS()
     local finalCmd;
     if currentOS == "Unix" then
         selectedText = selectedText:gsub("'", "'\\''")
         firstWord = firstWord:gsub("'", "'\\''")
         fzfArgs = config.GetGlobalOption("MicroOmni.GlobalSearchArgs"):gsub("'", "'\\''")
-        finalCmd =  "rg --glob=!.git/ -F -i -uu -n '\\''" .. firstWord .. "'\\'' | " .. 
-                    config.GetGlobalOption("MicroOmni.FzfCmd").." "..fzfArgs..
-                    " -q '\\''"..selectedText.."'\\''"
+        finalCmd =  "rg --glob=!.git/ "
+        
+        for _, loc in ipairs(locations) do
+            if string.len(loc) ~= 0 then
+                if loc:sub(-1, -1) ~= "/" then
+                    loc = loc .. "/"
+                end
+                finalCmd = finalCmd .. "'\\''--glob=" .. loc .. "**'\\'' "
+            end
+        end
+        
+        finalCmd =  finalCmd .. " -F -i -uu -n '\\''" .. firstWord .. "'\\'' | " .. 
+                    config.GetGlobalOption("MicroOmni.FzfCmd") .. " " .. fzfArgs ..
+                    " -q '\\''" .. selectedText .. "'\\''"
     else
         selectedText = selectedText:gsub("'", '"')
         firstWord = firstWord:gsub("'", '""')
         fzfArgs = config.GetGlobalOption("MicroOmni.GlobalSearchArgs"):gsub("'", '"')
-        finalCmd =  "rg --glob=!.git/ -F -i -uu -n ^\"" .. firstWord .. "^\" | " .. 
+        finalCmd =  "rg --glob=!.git/ -F -i "
+        
+        for _, loc in ipairs(locations) do
+            if string.len(loc) ~= 0 then
+                if loc:sub(-1, -1) == "\\" then
+                    loc = loc:sub(1, -2) .. "/"
+                elseif loc:sub(-1, -1) ~= "/" then
+                    loc = loc .. "/"
+                end
+                finalCmd = finalCmd .. "\"--glob=" .. loc .. "**\" "
+            end
+        end
+        
+        finalCmd =  finalCmd .. " -uu -n ^\"" .. firstWord .. "^\" | " .. 
                     config.GetGlobalOption("MicroOmni.FzfCmd").." "..fzfArgs..
                     " -q \""..selectedText.."\""
     end
@@ -79,27 +109,7 @@ local function FindContent(str, searchLoc)
 
     micro.Log("Running search cmd: ", finalCmd)
 
-    local currentLoc = os.Getwd()
-    if searchLoc ~= nil and searchLoc ~= "" then
-        if not Common.path_exists(searchLoc) then
-            micro.InfoBar():Error("", searchLoc, " doesn't exist")
-            return
-        end
-
-        if not Common.IsPathDir(searchLoc) then
-            micro.InfoBar():Error("", searchLoc, " is not a directory")
-            return
-        end
-
-        bp:CdCmd({searchLoc})
-    end
-
     local output, err = shell.RunInteractiveShell(finalCmd, false, true)
-
-    if searchLoc ~= nil and searchLoc ~= "" then
-        bp:CdCmd({currentLoc})
-    end
-
 
     if err ~= nil then
         -- micro.InfoBar():Error("Error is: ", err:Error())
@@ -112,12 +122,6 @@ local function FindContent(str, searchLoc)
             splitBp:SetLocalCmd({"filetype", bp.Buf.Settings["filetype"]})
          elseif output ~= "--" and output ~= "" and outputLinesCount == 1 then
             local path, lineNumber = output:match("^(.-):%s*(%d+):")
-            
-            if searchLoc ~= nil and searchLoc ~= "" then
-                -- micro.InfoBar():Message("Open path is ", filepath.Abs(OmniContentFindPath.."/"..path))
-                path = OmniContentFindPath.."/"..path
-            end
-            
             fzfParseOutput(path, bp, lineNumber, true)
         end
     end
@@ -147,7 +151,7 @@ function Self.OmniContent(bp)
         OmniSearchText = util.String(OmniSearchText)
     end
     
-    micro.InfoBar():Prompt( "Search Directory ({fileDir} for current file directory) > ", 
+    micro.InfoBar():Prompt( "Search Directories (use ',' to separate, {fileDir} for current file dir, prefix '!' to exclude) > ", 
                             "", 
                             "", 
                             nil, 

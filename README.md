@@ -91,7 +91,11 @@ Recommended binding:
 ```
 
 To find a with keyword(s), launch command `OmniGlobalSearch` which is bindable to a key.
-1. Enter the search directory, empty current root directory. `{fileDir}` can be used to substitute with current file directory
+1. Enter the search directories
+    - Empty for current root directory. 
+    - `{fileDir}` can be used to substitute with current file directory
+    - Use `,` to separate directories, for example `./MyDir,./MyDir2`
+    - Prefix `!` to exclude a directory, for example `!./ExcludeThisDir`
 2. Enter keywords (separated by spaces) to be searched (This is using ripgrep and not fuzzy search)
 3. If successful, a fzf window will be launched. You can now filter with fzf fuzzy search. 
 4. Here are the keybindings by default configured:
