@@ -22,6 +22,8 @@ local Diff = require("Diff")
 local Minimap = require("Minimap")
 local Session = require("Session")
 
+local OmniCursorSelectMarks = {}
+
 -- See issue https://github.com/zyedidia/micro/issues/3320
 -- Modified from https://github.com/kaarrot/microgrep/blob/e1a32e8b95397a40e5dda0fb43e7f8d17469b88c/microgrep.lua#L118
 local function WriteToClipboardWorkaround(content)
@@ -95,6 +97,41 @@ local function OmniSelect(bp, args)
     bp:Relocate()
 end
 
+local function OmniSelectMark(bp)
+    local hasMarks = false
+    if #OmniCursorSelectMarks ~= 0 then
+        hasMarks = true
+    end
+    
+    if hasMarks and #OmniCursorSelectMarks ~= bp.Buf:NumCursors() then
+        micro.InfoBar():Error("Cursor count mismatch, failed to perform marked selection")
+        OmniCursorSelectMarks = {}
+        return
+    end
+    
+    for i = 1, bp.Buf:NumCursors() do
+        local cursor = bp.Buf:GetCursor(i - 1)
+        local cursorLoc = buffer.Loc(cursor.Loc.X, cursor.Loc.Y)
+        
+        if hasMarks == false then
+            table.insert(OmniCursorSelectMarks, buffer.Loc(cursorLoc.X, cursorLoc.Y))
+        else
+            cursor.OrigSelection[1] = OmniCursorSelectMarks[i]
+            cursor:GotoLoc(cursorLoc)
+            cursor:SelectTo(cursorLoc)
+        end
+    end
+    
+    if hasMarks == true then
+        micro.InfoBar():Message("Selected from selection markers")
+        OmniCursorSelectMarks = {}
+        bp:Relocate()
+    else
+        micro.InfoBar():Message("Created ", #OmniCursorSelectMarks, " selection markers")
+    end
+end
+
+
 local function Internal_OmniCopyPathRelative(yes, cancelled)
     if cancelled or not yes then
         return
@@ -133,6 +170,8 @@ local function OmniCenter(bp)
     bp.Buf:ClearCursors()
     local targetLineY = view.StartLine.Line + view.Height / 2
     bp.Cursor:GotoLoc(Common.LocBoundCheck(bp.Buf, buffer.Loc(bp.Cursor.Loc.X, targetLineY)))
+    
+    micro.Log("Node Tree:\n", bp:Tab():String())
 end
 
 -- Testing auto complete for commands
@@ -398,6 +437,7 @@ function preinit()
     
     config.MakeCommand("OmniCenter", OmniCenter, config.NoComplete)
     config.MakeCommand("OmniJumpSelect", OmniSelect, config.NoComplete)
+    config.MakeCommand("OmniSelectMark", OmniSelectMark, config.NoComplete)
 
     config.MakeCommand("OmniPreviousHistory", History.GoToPreviousHistory, config.NoComplete)
     config.MakeCommand("OmniNextHistory", History.GoToNextHistory, config.NoComplete)
