@@ -11,7 +11,7 @@ List of features:
     - [🚀 Word Jumping (EasyMotion)](#-word-jumping-easymotion)
     - [📔 Global Cursor History](#-global-cursor-history)
     - [🔲 Centering Cursor To Viewport](#-centering-cursor-to-viewport)
-    - [🦘 Jump Selection](#-jump-selection)
+    - [🚩 Selection Marker](#-selection-marker)
     - [🔀 Better Multi Cursor](#-better-multi-cursor)
 - 📑 Tab Control:
     - [🗃️ Fuzzy Search For Opened Tabs](#%EF%B8%8F-fuzzy-search-for-opened-tabs)
@@ -244,7 +244,29 @@ Recommended binding:
 
 ---
 
+## 🚩 Selection Marker
+
+A multi cursor selection marker which marks the beginning of a selection when called the first time.
+And then perform the selection to the current cursors positions when called the second time.
+
+![Selection Marker Gif](./Resources/SelectionMarker.gif)
+
+
+Recommended binding:
+```json
+    "Alt-S": "command-edit:OmniSelectMark",
+    //Windows
+    "Alt-Shift-S": "command-edit:OmniSelectMark"
+```
+
+---
+
 ## 🦘 Jump Selection
+
+> [!IMPORTANT]
+> This is deprecated, and will be removed in a few feature releases. Use the more flexible
+> [🚩 Selection Marker](#-selection-marker) instead
+
 ![Jump Select Gif](./Resources/JumpSelect.gif)
 
 Recommended binding:
