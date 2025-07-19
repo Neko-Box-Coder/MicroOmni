@@ -54,33 +54,44 @@ local function OmniSelect(bp, args)
     if #args < 1 then return end
 
     local buf = bp.Buf
-    local cursor = buf:GetActiveCursor()
-    local targetLine = cursor.Loc.Y
+    
+    for i = 1, bp.Buf:NumCursors() do
+        local cursor = bp.Buf:GetCursor(i - 1)
+        if config.GetGlobalOption("MicroOmni.SelectType") ~= "relative" then
+            cursor = buf:GetActiveCursor()
+        end
+    
+        local targetLine = cursor.Loc.Y
+        local selectLineCount = tonumber(args[1])
+        if selectLineCount == nil then
+            micro.InfoBar():Error(args[1].." is not a valid target selection line")
+            return
+        end
 
-    local selectLineCount = tonumber(args[1])
-    if selectLineCount == nil then
-        micro.InfoBar():Error(args[1].." is not a valid target selection line")
-        return
-    end
+        if config.GetGlobalOption("MicroOmni.SelectType") == "relative" then
+            targetLine = targetLine + selectLineCount
+        else
+            targetLine = selectLineCount - 1
+        end
+        
+        local selectX = 0
+        cursor.OrigSelection[1] = buffer.Loc(cursor.Loc.X, cursor.Loc.Y)
 
-    if config.GetGlobalOption("MicroOmni.SelectType") == "relative" then
-        targetLine = targetLine + selectLineCount
-    else
-        targetLine = selectLineCount - 1
+        if targetLine > cursor.Loc.Y then
+            local lineLength = util.CharacterCountInString(buf:Line(targetLine))
+            selectX = lineLength
+        end
+
+        -- micro.InfoBar():Message("targetLine: ", targetLine)
+        -- micro.Log("targetLine: ", targetLine)
+        cursor:GotoLoc(buffer.Loc(selectX, targetLine))
+        cursor:SelectTo(buffer.Loc(selectX, targetLine))
+        
+        if config.GetGlobalOption("MicroOmni.SelectType") ~= "relative" then
+            break
+        end
     end
     
-    local selectX = 0
-    cursor.OrigSelection[1] = buffer.Loc(cursor.Loc.X, cursor.Loc.Y)
-
-    if targetLine > cursor.Loc.Y then
-        local lineLength = util.CharacterCountInString(buf:Line(targetLine))
-        selectX = lineLength
-    end
-
-    -- micro.InfoBar():Message("targetLine: ", targetLine)
-    -- micro.Log("targetLine: ", targetLine)
-    cursor:GotoLoc(buffer.Loc(selectX, targetLine))
-    cursor:SelectTo(buffer.Loc(selectX, targetLine))
     bp:Relocate()
 end
 
