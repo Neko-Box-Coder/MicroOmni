@@ -414,6 +414,8 @@ None (Invoke it in command pane)
 ## 🔦 Highlight Only (Before finding next)
 To highlight anything without going to it, launch the `OmniHighlightOnly` command.
 
+This shows the number of matches which you can go to with the `FindNext` and `FindPrevious` keybinds.
+
 ![Highlight Gif](./Resources/Highlight.gif)
 
 Recommended binding:
