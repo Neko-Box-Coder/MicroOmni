@@ -223,7 +223,8 @@ end
 local function InitializeSettings()
     config.RegisterCommonOption('MicroOmni', 'GlobalSearchArgs', 
             "--header='enter: select | alt-enter: output filtered results | alt-q/esc: exit | "..
-            "page-[up/down]: preview-[up/down] | alt-[up/down]: half-page-[up/down]' "..
+            "alt-f: ripgrep query | page-[up/down]: preview-[up/down] | "..
+            "alt-[up/down]: half-page-[up/down]' "..
             "--bind 'alt-f:reload:rg --glob=!.git/ -i -F -uu -n {q}' "..
             "--delimiter : -i --reverse "..
             "--bind page-up:preview-half-page-up,page-down:preview-half-page-down,"..
@@ -367,7 +368,7 @@ function preQuit(bp)
 end
 
 function onAnyEvent()
-    micro.Log("onAnyEvent called")
+    -- micro.Log("onAnyEvent called")
     local bpToCenter = Diff.UpdateDiffView()
     if bpToCenter ~= nil then
         OmniCenter(bpToCenter)
