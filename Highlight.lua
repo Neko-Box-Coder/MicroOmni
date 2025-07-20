@@ -103,12 +103,22 @@ local function PerformMultiCursor(bp, forceMove)
     end
     
     local lastCursor = bp.Buf:GetCursor(bp.Buf:NumCursors() - 1)
-    local moveCursor = false
+    if lastCursor:HasSelection() then
+        -- Move the cursor to the beginning of the selection if it has a selection to allow merging
+        if lastCursor:LessThan(buffer.Loc(lastCursor.CurSelection[1].X, lastCursor.CurSelection[1].Y)) then
+            lastCursor:GotoLoc(buffer.Loc(lastCursor.CurSelection[1].X, lastCursor.CurSelection[1].Y))
+        end
+        if lastCursor:LessThan(buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y)) then
+            lastCursor:GotoLoc(buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y))
+        end
+    end
     
+    local moveCursor = false
     if bp.Buf.Settings["MicroOmni.CanUseAddCursor"] then
         moveCursor = not lastCursor:HasSelection()
     else
-        moveCursor = ((bp.Buf:NumCursors() == 1 and not OmniFirstMultiCursorSpawned) and {true} or {false})[1]
+        moveCursor = (bp.Buf:NumCursors() == 1 and not OmniFirstMultiCursorSpawned)
+        -- moveCursor = (() and {true} or {false})[1]
     end
     
     if forceMove then moveCursor = true end
