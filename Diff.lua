@@ -114,7 +114,7 @@ local function processDiffOutput(output)
         end
     end
     
-    return table.concat(returnLines, "\n")
+    return returnLines
 end
 
 local function OnDiffFinishCallback(resp, cancelled)
@@ -243,13 +243,16 @@ local function OnDiffFinishCallback(resp, cancelled)
     
     micro.Log("output: ", output)
     micro.Log("err: ", err)
-    local processedDiff = processDiffOutput(output)
+    local processedDiffLines = processDiffOutput(output)
     
-    micro.Log("processedDiff: ", processedDiff)
     if err == nil or err:Error() == "exit status 1" or err:Error() == "exit status 2" then
         local curPane = micro.CurPane()
         
-        local buf, bufErr = buffer.NewBuffer(processedDiff, "diff"..#OmniDiffTargetPanes)
+        local buf, bufErr = buffer.NewBuffer("", "diff"..#OmniDiffTargetPanes)
+        for i = 1, #processedDiffLines do
+            buf:Insert(buffer.Loc(0, i - 1), processedDiffLines[i] .. "\n")
+        end
+        
         if bufErr ~= nil then 
             micro.InfoBar():Error(bufErr)
             return
