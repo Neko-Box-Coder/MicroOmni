@@ -52,6 +52,91 @@ local function CheckCommand(command)
     return true
 end
 
+-- "Inspired" from: https://github.com/zyedidia/micro/issues/1807#issuecomment-1907899274
+local function ResizeInternal(bp, expand, amount)
+    if amount == nil then
+        micro.InfoBar():Error("Failed to get MicroOmni.ResizeAmount")
+        return
+    end
+    
+    if not expand then
+        amount = amount * -1
+    end
+    
+    local n = amount
+    local tab = bp:Tab()
+    local id = bp:ID()
+    local node = tab:GetNode(id)
+    local nextChildren = {}
+    -- local nextChildrenParents = {}
+    
+    -- We need to figure out what is the parent of bp, need to traverse the whole tree
+    -- So first add all the children of tab
+    table.insert(nextChildren, tab:Children())
+    -- table.insert(nextChildrenParents, tab)
+    
+    local found = false
+    local isEnd = false
+    local prevNode = nil
+    -- local scaledParent = nil
+    while #nextChildren ~= 0 do
+        local children = nextChildren[1]
+        -- local parent = nextChildrenParents[1]
+        table.remove(nextChildren, 1)
+        -- table.remove(nextChildrenParents, 1)
+        
+        for i = 1, #children do
+            -- Keep searching recursively if we haven't found the bp
+            if children[i]:ID() ~= id then
+                table.insert(nextChildren, children[i]:Children())
+                -- table.insert(nextChildrenParents, children[i])
+            -- Stop and record the parent if we found the bp
+            else
+                found = true
+                isEnd = (i == #children)
+                -- scaledParent = parent
+                break
+            end
+            prevNode = children[i]
+        end
+    end
+    
+    if not found then
+        return
+    end
+    
+    -- NOTE: Dumb hack where ResizePane() actually resizes the previous node if the current node 
+    --       is at the end
+    if isEnd then
+        n = n * -1
+        node = prevNode
+    end
+    
+    -- Perform resizing
+    if node.Kind == 0 then      -- Vertical
+        bp:ResizePane(node.W + n)
+    elseif node.Kind == 1 then  -- Horizontal
+        bp:ResizePane(node.H + n)
+    end
+    
+    -- Finally, set all the children from bp's parent to not auto scale
+    -- if config.GetGlobalOption("MicroOmni.AutoDisablePropResize") then
+    --     for i = 1, #scaledParent:Children() do
+    --         scaledParent:Children()[i]:SetPropScale(false)
+    --     end
+    -- end
+end
+
+
+local function OmniResizeIncrease(bp)
+    ResizeInternal(bp, true, config.GetGlobalOption("MicroOmni.ResizeAmount"))
+end
+
+local function OmniResizeDecrease(bp)
+    ResizeInternal(bp, false, config.GetGlobalOption("MicroOmni.ResizeAmount"))
+end
+
+
 local function OmniSelect(bp, args)
     if #args < 1 then return end
 
@@ -334,6 +419,8 @@ local function InitializeSettings()
     config.RegisterCommonOption('MicroOmni', 'AutoSaveToLocal', false)
     config.RegisterCommonOption('MicroOmni', 'AutoSaveName', "autosave")
     config.RegisterCommonOption('MicroOmni', 'AutoSaveInterval', 60)
+    config.RegisterCommonOption('MicroOmni', 'ResizeAmount', 5)
+    -- config.RegisterCommonOption('MicroOmni', 'AutoDisablePropResize', true)
     
     if config.GetGlobalOption("OmniGlobalSearchArgs") ~= nil then
         micro.InfoBar():Error(  "OmniGlobalSearchArgs is no longer used, " .. 
@@ -474,6 +561,9 @@ function preinit()
     config.MakeCommand("OmniLoadSessionLocal", Session.LoadSessionLocal, Session.SessionCompleterLocal)
     config.MakeCommand("OmniListSessionsLocal", Session.ListSessionsLocal, config.NoComplete)
     config.MakeCommand("OmniDeleteSessionLocal", Session.DeleteSessionLocal, Session.SessionCompleterLocal)
+
+    config.MakeCommand("OmniResizeIncrease", OmniResizeIncrease, config.NoComplete)
+    config.MakeCommand("OmniResizeDecrease", OmniResizeDecrease, config.NoComplete)
     
     config.MakeCommand("OmniTest", OmniTest, TestCompleter)
     config.MakeCommand("OmniTest2", OmniTest2, config.NoComplete)

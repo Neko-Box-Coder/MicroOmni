@@ -21,11 +21,11 @@ List of features:
 - 📜 Buffers Actions:
     - [🧦 Diff View](#-diff-view)
     - [🔦 Highlight Only (Before finding next)](#-highlight-only-before-finding-next)
+    - [↗️ Resize Split With Keyboard](#%EF%B8%8F-resize-split-with-keyboard)
     - [📁 Copy Current File Path](#-copy-current-file-path)
     - [🗺️ Minimap](#%EF%B8%8F-minimap)
 - (WIP) Bracket jumping without on top of it
 - (WIP) Content selection within brackets
-- (WIP) Resize split with keyboard <!-- Using https://github.com/zyedidia/micro/issues/1807#issuecomment-1907899274 -->
 
 ---
 
@@ -444,6 +444,23 @@ Recommended binding:
 ```json
     "Alt-h": "command:OmniHighlightOnly"
 ```
+
+---
+
+## ↗️ Resize Split With Keyboard
+
+To resize split, launch the `OmniResizeIncrease` or `OmniResizeDecrease` command.
+
+![Resize Gif](./Resources/SplitResize.gif)
+
+Recommended binding:
+```json
+    "Alt-=": "command:OmniResizeIncrease",
+    "Alt--": "command:OmniResizeDecrease"
+```
+
+### ⚙️ Resize Settings
+- `MicroOmni.ResizeAmount`: How much to resize. Defaults to 5
 
 ---
 
