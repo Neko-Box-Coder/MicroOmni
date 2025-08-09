@@ -79,17 +79,16 @@ local function FindContent(str, searchLoc)
         finalCmd =  finalCmd .. " -F -i -uu -n '\\''" .. firstWord .. "'\\'' | " .. 
                     config.GetGlobalOption("MicroOmni.FzfCmd") .. " " .. fzfArgs ..
                     " -q '\\''" .. selectedText .. "'\\''"
-    else
+    elseif currentOS == "Windows" then
         selectedText = selectedText:gsub("'", '"')
         firstWord = firstWord:gsub("'", '""')
         fzfArgs = config.GetGlobalOption("MicroOmni.GlobalSearchArgs"):gsub("'", '"')
         finalCmd =  "rg --glob=!.git/ -F -i "
         
         for _, loc in ipairs(locations) do
+            loc = loc:gsub("\\", "/")
             if string.len(loc) ~= 0 then
-                if loc:sub(-1, -1) == "\\" then
-                    loc = loc:sub(1, -2) .. "/"
-                elseif loc:sub(-1, -1) ~= "/" then
+                if loc:sub(-1, -1) ~= "/" then
                     loc = loc .. "/"
                 end
                 finalCmd = finalCmd .. "\"--glob=" .. loc .. "**\" "
