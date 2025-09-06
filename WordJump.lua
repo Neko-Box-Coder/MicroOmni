@@ -32,9 +32,14 @@ local function AssignJumpWords(majorChars, minorChars, rowIndexStart, rowIndexEn
     
     local jumpWordToRc = {}
     local rcToOriWord = {}
-    local jumpWordsSeparators = " \t¬~_++<>:{}|&*($%^!\"£)#-=,.;[]'\\/"
+    local jumpWordsSeparators = " \t¬~++<>:{}|&*($%^!\"£)#-=,.;[]'\\/"
 
-    for i = rowIndexStart, rowIndexEnd do
+    local direction = 1
+    if rowIndexStart > rowIndexEnd then
+        direction = -1
+    end
+    
+    for i = rowIndexStart, rowIndexEnd, direction do
         rcToOriWord[i] = {}
         
         local currentLineBytes = bp.Buf:LineBytes(i)
@@ -127,14 +132,14 @@ local function AssignJumpWordsToView(msg)
     viewEnd = (viewEnd >= numberOfLines and {numberOfLines - 1} or {viewEnd})[1]
     local viewMid = (viewEnd + viewStart) / 2
 
-    local leftMajorChars = "ASDF"
+    local leftMajorChars = "FDSA"
     local leftMinorChars = "GQWERTZXCVB"
     
-    local rightMajorChars = "JKL"
-    local rightMinorChars = "HYUIOPNM"
+    local rightMajorChars = "JKLH"
+    local rightMinorChars = "YUIOPNM"
 
     local rightOriginalWords, rightJumpWords = AssignJumpWords( rightMajorChars..rightMinorChars, 
-                                                                rightMajorChars..rightMinorChars, 
+                                                                leftMajorChars..rightMajorChars..leftMinorChars..rightMinorChars, 
                                                                 viewMid, 
                                                                 viewEnd,
                                                                 msg)
@@ -144,9 +149,9 @@ local function AssignJumpWordsToView(msg)
     
     if viewMid ~= 0 then
         leftOriginalWords, leftJumpWords = AssignJumpWords( leftMajorChars..leftMinorChars, 
-                                                            leftMajorChars..leftMinorChars, 
-                                                            viewStart, 
+                                                            rightMajorChars..leftMajorChars..rightMinorChars..leftMinorChars, 
                                                             viewMid - 1,
+                                                            viewStart, 
                                                             msg)
     end
     
