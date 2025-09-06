@@ -22,7 +22,7 @@ local Self = {}
 -- NOTE: lineNum is string
 local function fzfParseOutput(output, bp, lineNum, gotoLineIfExists)
     micro.Log("fzfParseOutput called")
-    if output ~= "" then
+    if output ~= "" and output ~= nil then
         local file = string.gsub(output, "[\n\r]", "")
         if file == nil then
             return
