@@ -4,9 +4,9 @@ local util = import("micro/util")
 
 local config = import("micro/config")
 local fmt = import('fmt')
-package.path = fmt.Sprintf('%s;%s/plug/MicroOmni/?.lua', package.path, config.ConfigDir)
+package.path = fmt.Sprintf('%s;%s/plug/?.lua', package.path, config.ConfigDir)
 
-local Common = require("Common")
+local Common = require("MicroOmni.Common")
 
 local Self = {}
 

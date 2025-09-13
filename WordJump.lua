@@ -8,8 +8,8 @@ local utf8 = import("utf8")
 local fmt = import('fmt')
 
 
-package.path = fmt.Sprintf('%s;%s/plug/MicroOmni/?.lua', package.path, config.ConfigDir)
-local Common = require("Common")
+package.path = fmt.Sprintf('%s;%s/plug/?.lua', package.path, config.ConfigDir)
+local Common = require("MicroOmni.Common")
 
 local Self = {}
 

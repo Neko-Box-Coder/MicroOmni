@@ -10,8 +10,8 @@ local os = import("os")
 local runtime = import("runtime")
 local fmt = import('fmt')
 
-package.path = fmt.Sprintf('%s;%s/plug/MicroOmni/?.lua', package.path, config.ConfigDir)
-local Common = require("Common")
+package.path = fmt.Sprintf('%s;%s/plug/?.lua', package.path, config.ConfigDir)
+local Common = require("MicroOmni.Common")
 
 
 local OmniContentFindPath = ""
