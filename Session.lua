@@ -7,7 +7,9 @@ local filepath = import("path/filepath")
 local strings = import("strings")
 local goos = import("os")
 
-local Common = require("Common")
+local fmt = import('fmt')
+package.path = fmt.Sprintf('%s;%s/plug/?.lua', package.path, config.ConfigDir)
+local Common = require("MicroOmni.Common")
 
 local Session = {}
 

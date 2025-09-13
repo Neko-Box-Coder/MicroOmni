@@ -11,16 +11,16 @@ local strings = import("strings")
 
 local config = import("micro/config")
 local fmt = import('fmt')
-package.path = fmt.Sprintf('%s;%s/plug/MicroOmni/?.lua', package.path, config.ConfigDir)
+package.path = fmt.Sprintf('%s;%s/plug/?.lua', package.path, config.ConfigDir)
 
-local Common = require("Common")
-local Search = require("Search")
-local History = require("History")
-local WordJump = require("WordJump")
-local Highlight = require("Highlight")
-local Diff = require("Diff")
-local Minimap = require("Minimap")
-local Session = require("Session")
+local Common = require("MicroOmni.Common")
+local Search = require("MicroOmni.Search")
+local History = require("MicroOmni.History")
+local WordJump = require("MicroOmni.WordJump")
+local Highlight = require("MicroOmni.Highlight")
+local Diff = require("MicroOmni.Diff")
+local Minimap = require("MicroOmni.Minimap")
+local Session = require("MicroOmni.Session")
 
 local OmniCursorSelectMarks = {}
 
