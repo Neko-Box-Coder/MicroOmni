@@ -517,6 +517,8 @@ function onAnyEvent()
     Session.CheckAutoSave()
 end
 
+local InitErrorMsg = ""
+
 function preinit()
     config.MakeCommand("OmniGlobalSearch", Search.OmniContent, config.NoComplete)
     config.MakeCommand("OmniLocalSearch", Search.OmniLocalSearch, config.NoComplete)
@@ -601,8 +603,13 @@ function preinit()
             end
         end
         
-        micro.InfoBar():Error(  missingCommandsString..
-                                "are missing. Some functionalities might not work")
+        InitErrorMsg = missingCommandsString.."are missing. Some functionalities might not work"
     end
 
+end
+
+function init()
+    if string.len(InitErrorMsg) ~= 0 then
+        micro.InfoBar():Error(InitErrorMsg)
+    end
 end
