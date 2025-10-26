@@ -6,7 +6,6 @@ local config = import("micro/config")
 local buffer = import("micro/buffer")
 
 
-local os = import("os")
 local runtime = import("runtime")
 local fmt = import('fmt')
 
@@ -150,7 +149,8 @@ function Self.OmniContent(bp)
         OmniSearchText = util.String(OmniSearchText)
     end
     
-    micro.InfoBar():Prompt( "Search Directories (use ',' to separate, {fileDir} for current file dir, prefix '!' to exclude) > ", 
+    micro.InfoBar():Prompt( "Search Directories (use ',' to separate, {fileDir} for current " ..
+                            "file dir, prefix '!' to exclude) > ", 
                             "", 
                             "", 
                             nil, 

@@ -265,7 +265,7 @@ function Self.OmniMinimap(bp)
     
     -- Output minimap
     local outputStr = util.String({})
-    for i, line in ipairs(outputLines) do
+    for _, line in ipairs(outputLines) do
         local currentLineBytes = { string.byte(line .. "\n", 1, -1) }
         local currentLineStr = util.String(currentLineBytes)
         outputStr = strings.Join({outputStr, currentLineStr}, "")

@@ -139,7 +139,8 @@ local function AssignJumpWordsToView(msg)
     local rightMinorChars = "YUIOPNM"
 
     local rightOriginalWords, rightJumpWords = AssignJumpWords( rightMajorChars..rightMinorChars, 
-                                                                leftMajorChars..rightMajorChars..leftMinorChars..rightMinorChars, 
+                                                                leftMajorChars..rightMajorChars..
+                                                                    leftMinorChars..rightMinorChars, 
                                                                 viewMid, 
                                                                 viewEnd,
                                                                 msg)
@@ -149,7 +150,8 @@ local function AssignJumpWordsToView(msg)
     
     if viewMid ~= 0 then
         leftOriginalWords, leftJumpWords = AssignJumpWords( leftMajorChars..leftMinorChars, 
-                                                            rightMajorChars..leftMajorChars..rightMinorChars..leftMinorChars, 
+                                                            rightMajorChars..leftMajorChars..
+                                                                rightMinorChars..leftMinorChars, 
                                                             viewMid - 1,
                                                             viewStart, 
                                                             msg)
