@@ -456,6 +456,10 @@ This shows the number of matches which you can go to with the `FindNext` and `Fi
 
 ![Highlight Gif](./Resources/Highlight.gif)
 
+It now shows which occurrence you are currently at.
+
+![Occurrence Count Gif](./Resources/OccurrenceCount.png)
+
 Recommended binding:
 ```json
     "Alt-h": "command:OmniHighlightOnly"

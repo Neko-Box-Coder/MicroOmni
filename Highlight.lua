@@ -6,11 +6,12 @@ local config = import("micro/config")
 local fmt = import('fmt')
 package.path = fmt.Sprintf('%s;%s/plug/?.lua', package.path, config.ConfigDir)
 
-local Common = require("MicroOmni.Common")
-
 local Self = {}
 
-local OmniFirstMultiCursorSpawned = false
+local OmniBufStoredPanes = {}
+local OmniBufLastFindMsg = {}
+local OmniBufFoundOccurrence = {}
+local OmniBufInverseFoundOccurrence = {}
 
 local function OnTypingHighlight(msg)
     if micro.CurPane() == nil or micro.CurPane().Buf == nil then return end
@@ -55,6 +56,26 @@ local function OnSubmitHighlightFind(msg, cancelled)
     local currentLoc = buffer.Loc(startFindLoc.X, startFindLoc.Y)
     local firstOccurrenceLoc = buffer.Loc(-1, -1)
     
+    local bpIndex = -1
+    for i, val in ipairs(OmniBufStoredPanes) do
+        if val == bp then
+            bpIndex = i
+            break
+        end
+    end
+    
+    if bpIndex == -1 then
+        table.insert(OmniBufStoredPanes, bp)
+        table.insert(OmniBufLastFindMsg, msg)
+        table.insert(OmniBufFoundOccurrence, {})
+        table.insert(OmniBufInverseFoundOccurrence, {})
+        bpIndex = #OmniBufStoredPanes
+    else
+        OmniBufLastFindMsg[bpIndex] = msg
+        OmniBufFoundOccurrence[bpIndex] = {}
+        OmniBufInverseFoundOccurrence[bpIndex] = {}
+    end
+    
     while true do
         local foundLocs, found, err = bp.Buf:FindNext(  msg, 
                                                         startFindLoc, 
@@ -70,8 +91,18 @@ local function OnSubmitHighlightFind(msg, cancelled)
             
             break
         end
-    
+        
         currentLoc = buffer.Loc(foundLocs[2].X, foundLocs[2].Y)
+        
+        local currentLocTable = {foundLocs[2].X, foundLocs[2].Y}
+        table.insert(OmniBufFoundOccurrence[bpIndex], currentLocTable)
+        if OmniBufInverseFoundOccurrence[bpIndex][currentLocTable[1]] == nil then
+            OmniBufInverseFoundOccurrence[bpIndex][currentLocTable[1]] = {}
+        end
+        
+        OmniBufInverseFoundOccurrence[bpIndex][currentLocTable[1]][currentLocTable[2]] = 
+            #OmniBufFoundOccurrence[bpIndex]
+        
         foundCounter = foundCounter + 1
         
         if foundCounter == 1 then
@@ -221,6 +252,54 @@ local function PerformMultiCursor(bp, forceMove)
     bp:Relocate()
 end
 
+local function ShowFoundIndex()
+    if micro.CurPane() == nil or micro.CurPane().Buf == nil then return end
+    
+    local bp = micro.CurPane()
+    
+    local bpIndex = -1
+    for i, val in ipairs(OmniBufStoredPanes) do
+        if val == bp then
+            bpIndex = i
+            break
+        end
+    end
+    
+    if bpIndex == -1 then
+        return
+    end
+    
+    if  not bp.Buf.LastSearchRegex or 
+        not bp.Buf.HighlightSearch or 
+        OmniBufLastFindMsg[bpIndex] ~= bp.Buf.LastSearch then
+    
+        return
+    end
+    
+    -- If we are not in any of the found entry, get out
+    if  OmniBufInverseFoundOccurrence[bpIndex][bp.Cursor.Loc.X] == nil or 
+        OmniBufInverseFoundOccurrence[bpIndex][bp.Cursor.Loc.X][bp.Cursor.Loc.Y] == nil then
+        -- local currentLocTable = {bp.Cursor.Loc.X, bp.Cursor.Loc.Y}
+        -- micro.Log("currentLocTable:", currentLocTable)
+        -- 
+        -- for i, val in ipairs(OmniBufFoundOccurrence[bpIndex]) do
+        --     micro.Log("OmniBufFoundOccurrence[bpIndex][", i, "]:", val)
+        -- end
+        -- 
+        -- for k, v in pairs(OmniBufInverseFoundOccurrence[bpIndex]) do
+        --     micro.Log("OmniBufInverseFoundOccurrence[bpIndex] key:", k)
+        --     micro.Log("OmniBufInverseFoundOccurrence[bpIndex] val:", v)
+        -- end
+        return
+    end
+    
+    local outputMsg =   
+        "At occurrences " .. 
+        tostring(OmniBufInverseFoundOccurrence[bpIndex][bp.Cursor.Loc.X][bp.Cursor.Loc.Y]) .. 
+        "/" .. tostring(#OmniBufFoundOccurrence[bpIndex])
+                        
+    micro.InfoBar():Message(outputMsg)
+end
 
 function Self.OmniSpawnCursorNextHighlight(bp)
     PerformMultiCursor(bp, false)
@@ -228,6 +307,14 @@ end
 
 function Self.OmniMoveLastCursorNextHighlight(bp)
     PerformMultiCursor(bp, true)
+end
+
+function Self.OmniOnNextFind()
+    ShowFoundIndex()
+end
+
+function Self.OmniOnPrevFind()
+    ShowFoundIndex()
 end
 
 return Self

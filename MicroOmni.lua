@@ -505,7 +505,8 @@ function preQuit(bp)
 end
 
 function onAnyEvent()
-    -- micro.Log("onAnyEvent called")
+    -- micro.Log("onAnyEvent starts")
+    
     local bpToCenter = Diff.UpdateDiffView()
     if bpToCenter ~= nil then
         OmniCenter(bpToCenter)
@@ -515,6 +516,17 @@ function onAnyEvent()
     
     -- Add auto-save check
     Session.CheckAutoSave()
+    
+    -- micro.Log("onAnyEvent ends")
+    return true
+end
+
+function onFindNext()
+    Highlight.OmniOnNextFind()
+end
+
+function onFindPrevious()
+    Highlight.OmniOnPrevFind()
 end
 
 local InitErrorMsg = ""
