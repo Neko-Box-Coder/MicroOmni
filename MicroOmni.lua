@@ -544,6 +544,8 @@ function preinit()
     config.MakeCommand("OmniNewTabLeft", OmniNewTabLeft, config.NoComplete)
 
     config.MakeCommand("OmniDiff", Diff.OmniDiff, config.NoComplete)
+    config.MakeCommand("OmniMapSideBySide", Diff.OmniMapSideBySide, config.NoComplete)
+    config.MakeCommand("OmniUnmapSideBySide", Diff.OmniUnmapSideBySide, config.NoComplete)
     
     config.MakeCommand("OmniMinimap", Minimap.OmniMinimap, config.NoComplete)
     

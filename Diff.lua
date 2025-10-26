@@ -13,6 +13,9 @@ local Self = {}
 local OmniDiffPlusFile = true
 local OmniDiffTargetPanes = {}
 local OmniDiffDiffPanes = {}
+local OmniDiffDiffPanesLineOffsets = {}     -- Target start line = Diff start line + offset
+local OmniDiffDiffPanesPersistent = {}
+
 
 local function processDiffOutput(output)
     local outputLines = {}
@@ -263,6 +266,8 @@ local function OnDiffFinishCallback(resp, cancelled)
         local diffPane = micro.CurPane():VSplitIndex(buf, not OmniDiffPlusFile)
         table.insert(OmniDiffTargetPanes, curPane)
         table.insert(OmniDiffDiffPanes, diffPane)
+        table.insert(OmniDiffDiffPanesLineOffsets, 0)
+        table.insert(OmniDiffDiffPanesPersistent, false)
         micro.CurPane():SetLocalCmd({"filetype", "patch"})
         
         -- Set focus back so that it is not scroll to top
@@ -277,13 +282,17 @@ function Self.CheckAndQuitDiffView(targetBp)
         return
     end
     
-    -- If one of the target pane is trying to quit, we quit the diff view first. 
+    -- If one of the target pane is trying to quit, we quit the diff view first if it is not persistent
     -- Then remove the records
     for i, val in ipairs(OmniDiffTargetPanes) do
         if targetBp == val then
-            OmniDiffDiffPanes[i]:Quit()
+            if not OmniDiffDiffPanesPersistent[i] then
+                OmniDiffDiffPanes[i]:Quit()
+            end
             table.remove(OmniDiffTargetPanes, i)
             table.remove(OmniDiffDiffPanes, i)
+            table.remove(OmniDiffDiffPanesLineOffsets, i)
+            table.remove(OmniDiffDiffPanesPersistent, i)
             return
         end
     end
@@ -293,6 +302,8 @@ function Self.CheckAndQuitDiffView(targetBp)
         if targetBp == val then
             table.remove(OmniDiffTargetPanes, i)
             table.remove(OmniDiffDiffPanes, i)
+            table.remove(OmniDiffDiffPanesLineOffsets, i)
+            table.remove(OmniDiffDiffPanesPersistent, i)
             return
         end
     end
@@ -306,7 +317,10 @@ function Self.UpdateDiffView()
     
     for i, val in ipairs(OmniDiffTargetPanes) do
         if micro.CurPane() == val then
-            OmniDiffDiffPanes[i]:GetView().StartLine.Line = micro.CurPane():GetView().StartLine.Line
+            -- Target start line = Diff start line + offset
+            OmniDiffDiffPanes[i]:GetView().StartLine.Line = 
+                micro.CurPane():GetView().StartLine.Line - OmniDiffDiffPanesLineOffsets[i]
+            
             -- OmniCenter(OmniDiffDiffPanes[i])
             return OmniDiffDiffPanes[i]
         end
@@ -314,7 +328,10 @@ function Self.UpdateDiffView()
     
     for i, val in ipairs(OmniDiffDiffPanes) do
         if micro.CurPane() == val then
-            OmniDiffTargetPanes[i]:GetView().StartLine.Line = micro.CurPane():GetView().StartLine.Line
+            -- Target start line = Diff start line + offset
+            OmniDiffTargetPanes[i]:GetView().StartLine.Line = 
+                micro.CurPane():GetView().StartLine.Line + OmniDiffDiffPanesLineOffsets[i]
+            
             -- OmniCenter(OmniDiffTargetPanes[i])
             return OmniDiffTargetPanes[i]
         end
@@ -338,5 +355,68 @@ end
 function Self.OmniDiff(bp)
     micro.InfoBar():YNPrompt("Is this plus file? (y/n/esc) > ", OnDiffPlusCallback)
 end
+
+function Self.OmniMapSideBySide(bp)
+    -- local curSplitId = bp:ID()
+    
+    if #bp:Tab().Panes <= 1 then
+        micro.InfoBar():Error("Current tab has 1 or less split, cannot perform side by side scrolling")
+        return
+    end
+    
+    local active = -1
+    for i = 1, #bp:Tab().Panes do
+        if bp:Tab().Panes[i] == bp then
+            active = i
+            break
+        end
+    end
+    
+    local diffBp
+    if active + 1 > #bp:Tab().Panes then
+        diffBp = bp:Tab().Panes[1]
+    else
+        diffBp = bp:Tab().Panes[active + 1]
+    end
+    
+    table.insert(OmniDiffTargetPanes, bp)
+    table.insert(OmniDiffDiffPanes, diffBp)
+    
+    -- Target start line = Diff start line + offset
+    table.insert(   OmniDiffDiffPanesLineOffsets, 
+                    diffBp:GetView().StartLine.Line - bp:GetView().StartLine.Line)
+    -- micro.Log("diffBp:GetView().StartLine.Line:", diffBp:GetView().StartLine.Line)
+    -- micro.Log("bp:GetView().StartLine.Line:", bp:GetView().StartLine.Line)
+    
+    table.insert(OmniDiffDiffPanesPersistent, true)
+    
+    micro.InfoBar():Message("Mapped scrolling to next pane")
+end
+
+function Self.OmniUnmapSideBySide(bp)
+    
+    for i, val in ipairs(OmniDiffTargetPanes) do
+        if bp == val then
+            table.remove(OmniDiffTargetPanes, i)
+            table.remove(OmniDiffDiffPanes, i)
+            table.remove(OmniDiffDiffPanesLineOffsets, i)
+            table.remove(OmniDiffDiffPanesPersistent, i)
+            micro.InfoBar():Message("Unmapped scrolling")
+            return
+        end
+    end
+    
+    for i, val in ipairs(OmniDiffDiffPanes) do
+        if bp == val then
+            table.remove(OmniDiffTargetPanes, i)
+            table.remove(OmniDiffDiffPanes, i)
+            table.remove(OmniDiffDiffPanesLineOffsets, i)
+            table.remove(OmniDiffDiffPanesPersistent, i)
+            micro.InfoBar():Message("Unmapped scrolling")
+            return
+        end
+    end
+end
+
 
 return Self

@@ -20,10 +20,12 @@ List of features:
     - [💾 Session Management](#-session-management)
 - 📜 Buffers Actions:
     - [🧦 Diff View](#-diff-view)
+    - [🧲 Side By Side View](#-side-by-side-view)
     - [🔦 Highlight Only (Before finding next)](#-highlight-only-before-finding-next)
     - [↗️ Resize Split With Keyboard](#%EF%B8%8F-resize-split-with-keyboard)
     - [📁 Copy Current File Path](#-copy-current-file-path)
     - [🗺️ Minimap](#%EF%B8%8F-minimap)
+- (WIP) Command mode
 - (WIP) Bracket jumping without on top of it
 - (WIP) Content selection within brackets
 
@@ -426,6 +428,20 @@ The syntax for diffing a tab is as follow
 
 With `+` or `-` means it will be relative tab index, or absolute otherwise, similar to `tabmove`.
 The split index can be used to specify which split to be diff against
+
+Recommended binding:
+
+None (Invoke it in command pane)
+
+---
+
+## 🧲 Side By Side View
+Similar to diff view, you can synchronize scrolling of two splits when you just want to have a side
+by side view by launching the `OmniMapSideBySide` command.
+
+To unmap side by side, launching the `OmniUnmapSideBySide` command.
+
+![Side By Side Gif](./Resources/MapScroll.gif)
 
 Recommended binding:
 
