@@ -103,57 +103,81 @@ local function PerformMultiCursor(bp, forceMove)
     end
     
     local lastCursor = bp.Buf:GetCursor(bp.Buf:NumCursors() - 1)
+    local searchStart = nil
+    local lastCursorBegin = nil
     if lastCursor:HasSelection() then
         -- Move the cursor to the beginning of the selection if it has a selection to allow merging
-        if lastCursor:LessThan(buffer.Loc(lastCursor.CurSelection[1].X, lastCursor.CurSelection[1].Y)) then
+        if lastCursor.CurSelection[1]:LessThan(buffer.Loc(  lastCursor.CurSelection[2].X, 
+                                                            lastCursor.CurSelection[2].Y)) then
+            
             lastCursor:GotoLoc(buffer.Loc(lastCursor.CurSelection[1].X, lastCursor.CurSelection[1].Y))
-        end
-        if lastCursor:LessThan(buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y)) then
-            lastCursor:GotoLoc(buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y))
-        end
-    end
-    
-    local moveCursor = false
-    if bp.Buf.Settings["MicroOmni.CanUseAddCursor"] then
-        moveCursor = not lastCursor:HasSelection()
-    else
-        moveCursor = (bp.Buf:NumCursors() == 1 and not OmniFirstMultiCursorSpawned)
-        -- moveCursor = (() and {true} or {false})[1]
-    end
-    
-    if forceMove then moveCursor = true end
-    
-    local searchStart = nil
-    
-    if moveCursor then
-        OmniFirstMultiCursorSpawned = true
-        bp:Deselect()
-        local currentLoc = lastCursor.Loc
-        -- searchStart = bp.Buf, buffer.Loc(currentLoc.X, currentLoc.Y)
-        -- searchStart = Common.LocBoundCheck(bp.Buf, buffer.Loc(currentLoc.X, currentLoc.Y - 1))
-        searchStart = Common.LocBoundCheck(bp.Buf, buffer.Loc(0, currentLoc.Y))
-        -- bp.Cursor:Deselect(false)
-    else
-        OmniFirstMultiCursorSpawned = false
-        
-        if bp.Buf.Settings["MicroOmni.CanUseAddCursor"] then
             searchStart = buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y)
+            lastCursorBegin = buffer.Loc(lastCursor.CurSelection[1].X, lastCursor.CurSelection[1].Y)
         else
-            searchStart = buffer.Loc(lastCursor.Loc.X, lastCursor.Loc.Y)
+            lastCursor:GotoLoc(buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y))
+            searchStart = buffer.Loc(lastCursor.CurSelection[1].X, lastCursor.CurSelection[1].Y)
+            lastCursorBegin = buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y)
         end
     end
     
-    local foundLocs, found, err = bp.Buf:FindNext(  bp.Buf.LastSearch, 
+    if searchStart == nil then
+        searchStart = buffer.Loc(lastCursor.Loc.X + 1, lastCursor.Loc.Y)
+        lastCursorBegin = buffer.Loc(lastCursor.Loc.X, lastCursor.Loc.Y)
+    end
+    
+    local differentFound = false
+    local nextFoundLocs = nil
+    local cursorOnFound = false
+    local i = 1
+    while i < 2 do
+        local foundLocs, found, err = bp.Buf:FindNext(  bp.Buf.LastSearch, 
+                                                        bp.Buf:Start(), 
+                                                        bp.Buf:End(), 
+                                                        searchStart, 
+                                                        true,
+                                                        true)
+        
+        if found == false or err ~= nil then
+            micro.InfoBar():Message("No occurrences found")
+            return
+        end
+        
+        -- We found an unique occurrence, Check if the cursor is on an occurrence
+        if foundLocs[1].X ~= lastCursor.Loc.X or foundLocs[1].Y ~= lastCursor.Loc.Y then
+            differentFound = true
+            nextFoundLocs = {   buffer.Loc(foundLocs[1].X, foundLocs[1].Y), 
+                                buffer.Loc(foundLocs[2].X, foundLocs[2].Y)}
+            
+            foundLocs, found, err = bp.Buf:FindNext(bp.Buf.LastSearch, 
                                                     bp.Buf:Start(), 
                                                     bp.Buf:End(), 
-                                                    searchStart, 
-                                                    true,
+                                                    nextFoundLocs[1], 
+                                                    false,
                                                     true)
+            -- What?
+            if found == false or err ~= nil then
+                break
+            end
+            
+            if lastCursorBegin.X == foundLocs[1].X and lastCursorBegin.Y == foundLocs[1].Y then
+                cursorOnFound = true
+            else
+                -- micro.Log("lastCursorBegin:", lastCursorBegin)
+                -- micro.Log("foundLocs[1]:", foundLocs[1])
+                -- micro.Log("searchStart:", searchStart)
+            end
+            break
+        end
+        
+        i = i + 1
+    end
     
-    if found == false or err ~= nil then
-        micro.InfoBar():Message("No occurrences found")
+    if not differentFound then
         return
     end
+    
+    local moveCursor = (not cursorOnFound) or forceMove
+    -- micro.Log("cursorOnFound:", cursorOnFound)
     
     -- Spawn new cursor if we don't move the last cursor
     if not moveCursor then
@@ -171,8 +195,8 @@ local function PerformMultiCursor(bp, forceMove)
     end
     
     if bp.Buf.Settings["MicroOmni.CanUseAddCursor"] then
-        lastCursor:SetSelectionStart(foundLocs[1])
-        lastCursor:SetSelectionEnd(foundLocs[2])
+        lastCursor:SetSelectionStart(nextFoundLocs[1])
+        lastCursor:SetSelectionEnd(nextFoundLocs[2])
         lastCursor.OrigSelection[1].X = lastCursor.CurSelection[1].X
         lastCursor.OrigSelection[1].Y = lastCursor.CurSelection[1].Y
         lastCursor.OrigSelection[2].X = lastCursor.CurSelection[2].X
@@ -182,10 +206,15 @@ local function PerformMultiCursor(bp, forceMove)
         if not moveCursor then
             bp.Buf:AddCursor(lastCursor)
         end
+    -- Can't do selection because SpawnMultiCursorDown() deselects all the cursors. 
+    -- Probably could have saved the cursor selections and then restore them, but effort..
     else
-        lastCursor.Loc.X = foundLocs[2].X
-        lastCursor.Loc.Y = foundLocs[2].Y
+        lastCursor.Loc.X = nextFoundLocs[1].X
+        lastCursor.Loc.Y = nextFoundLocs[1].Y
     end
+    
+    -- micro.Log("lastCursor.Loc:", lastCursor.Loc)
+    -- micro.Log("")
     
     bp.Buf:SetCurCursor(bp.Buf:NumCursors() - 1)
     bp.Buf:MergeCursors()
