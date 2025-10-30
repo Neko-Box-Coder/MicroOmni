@@ -136,22 +136,29 @@ local function PerformMultiCursor(bp, forceMove)
     local lastCursor = bp.Buf:GetCursor(bp.Buf:NumCursors() - 1)
     local searchStart = nil
     local lastCursorBegin = nil
-    if lastCursor:HasSelection() then
-        -- Move the cursor to the beginning of the selection if it has a selection to allow merging
-        if lastCursor.CurSelection[1]:LessThan(buffer.Loc(  lastCursor.CurSelection[2].X, 
-                                                            lastCursor.CurSelection[2].Y)) then
-            
-            lastCursor:GotoLoc(buffer.Loc(lastCursor.CurSelection[1].X, lastCursor.CurSelection[1].Y))
-            searchStart = buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y)
-            lastCursorBegin = buffer.Loc(lastCursor.CurSelection[1].X, lastCursor.CurSelection[1].Y)
-        else
-            lastCursor:GotoLoc(buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y))
-            searchStart = buffer.Loc(lastCursor.CurSelection[1].X, lastCursor.CurSelection[1].Y)
-            lastCursorBegin = buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y)
-        end
-    end
     
-    if searchStart == nil then
+    local cursorEnd = true
+    local selectionReversed = false
+    
+    if lastCursor:HasSelection() then
+        -- Reorder selection LOC
+        local sels = {}
+        if lastCursor.CurSelection[1]:LessThan(buffer.Loc(  lastCursor.OrigSelection[1].X, 
+                                                            lastCursor.OrigSelection[1].Y)) then
+            selectionReversed = true
+            cursorEnd = false
+        else
+            selectionReversed = false
+            cursorEnd = true
+        end
+        
+        table.insert(sels, buffer.Loc(lastCursor.CurSelection[1].X, lastCursor.CurSelection[1].Y))
+        table.insert(sels, buffer.Loc(lastCursor.CurSelection[2].X, lastCursor.CurSelection[2].Y))
+        
+        searchStart = buffer.Loc(sels[2].X, sels[2].Y)
+        lastCursorBegin = buffer.Loc(sels[1].X, sels[1].Y)
+    else
+        cursorEnd = false
         searchStart = buffer.Loc(lastCursor.Loc.X + 1, lastCursor.Loc.Y)
         lastCursorBegin = buffer.Loc(lastCursor.Loc.X, lastCursor.Loc.Y)
     end
@@ -174,7 +181,7 @@ local function PerformMultiCursor(bp, forceMove)
         end
         
         -- We found an unique occurrence, Check if the cursor is on an occurrence
-        if foundLocs[1].X ~= lastCursor.Loc.X or foundLocs[1].Y ~= lastCursor.Loc.Y then
+        if foundLocs[1].X ~= lastCursorBegin.X or foundLocs[1].Y ~= lastCursorBegin.Y then
             differentFound = true
             nextFoundLocs = {   buffer.Loc(foundLocs[1].X, foundLocs[1].Y), 
                                 buffer.Loc(foundLocs[2].X, foundLocs[2].Y)}
@@ -192,10 +199,10 @@ local function PerformMultiCursor(bp, forceMove)
             
             if lastCursorBegin.X == foundLocs[1].X and lastCursorBegin.Y == foundLocs[1].Y then
                 cursorOnFound = true
-            else
-                -- micro.Log("lastCursorBegin:", lastCursorBegin)
-                -- micro.Log("foundLocs[1]:", foundLocs[1])
-                -- micro.Log("searchStart:", searchStart)
+                cursorEnd = false
+            elseif lastCursorBegin.X == foundLocs[2].X and lastCursorBegin.Y == foundLocs[2].Y then
+                cursorOnFound = true
+                cursorEnd = true
             end
             break
         end
@@ -208,40 +215,73 @@ local function PerformMultiCursor(bp, forceMove)
     end
     
     local moveCursor = (not cursorOnFound) or forceMove
-    -- micro.Log("cursorOnFound:", cursorOnFound)
     
     -- Spawn new cursor if we don't move the last cursor
     if not moveCursor then
         if bp.Buf.Settings["MicroOmni.CanUseAddCursor"] then
             lastCursor = bp:SpawnCursorAtLoc(buffer.Loc(0, 0))
         else
+            -- Save and restore original cursor if we can't use `AddCursor()`, since 
+            -- `SpawnMultiCursorDown()` moves the cursor that has selection to the beginning 
+            local origHasSelection = lastCursor:HasSelection()
+            local origLocX = 0
+            local origLocY = 0
+            if origHasSelection then
+                if not selectionReversed then
+                    origLocX = lastCursor.CurSelection[2].X
+                    origLocY = lastCursor.CurSelection[2].Y
+                    cursorEnd = true
+                else
+                    origLocX = lastCursor.CurSelection[1].X
+                    origLocY = lastCursor.CurSelection[1].Y
+                    cursorEnd = false
+                end
+            end
+            
             if not bp:SpawnMultiCursorDown() then
                 if not bp:SpawnMultiCursorUp() then
                     micro.InfoBar():Error("Failed to spawn cursor...")
                     return
                 end
             end
+            
+            if origHasSelection then
+                lastCursor.Loc.X = origLocX
+                lastCursor.Loc.Y = origLocY
+            end
+            
             lastCursor = bp.Buf:GetCursor(bp.Buf:NumCursors() - 1)
         end
     end
     
     if bp.Buf.Settings["MicroOmni.CanUseAddCursor"] then
-        lastCursor:SetSelectionStart(nextFoundLocs[1])
-        lastCursor:SetSelectionEnd(nextFoundLocs[2])
-        lastCursor.OrigSelection[1].X = lastCursor.CurSelection[1].X
-        lastCursor.OrigSelection[1].Y = lastCursor.CurSelection[1].Y
-        lastCursor.OrigSelection[2].X = lastCursor.CurSelection[2].X
-        lastCursor.OrigSelection[2].Y = lastCursor.CurSelection[2].Y
-        lastCursor.Loc.X = lastCursor.CurSelection[2].X
-        lastCursor.Loc.Y = lastCursor.CurSelection[2].Y
+        if selectionReversed then
+            lastCursor.OrigSelection[1].X = nextFoundLocs[2].X
+            lastCursor.OrigSelection[1].Y = nextFoundLocs[2].Y
+            lastCursor:SelectTo(nextFoundLocs[1])
+            lastCursor.Loc.X = nextFoundLocs[1].X
+            lastCursor.Loc.Y = nextFoundLocs[1].Y
+        else
+            lastCursor.OrigSelection[1].X = nextFoundLocs[1].X
+            lastCursor.OrigSelection[1].Y = nextFoundLocs[1].Y
+            lastCursor:SelectTo(nextFoundLocs[2])
+            lastCursor.Loc.X = nextFoundLocs[2].X
+            lastCursor.Loc.Y = nextFoundLocs[2].Y
+        end
+        
         if not moveCursor then
             bp.Buf:AddCursor(lastCursor)
         end
     -- Can't do selection because SpawnMultiCursorDown() deselects all the cursors. 
     -- Probably could have saved the cursor selections and then restore them, but effort..
     else
-        lastCursor.Loc.X = nextFoundLocs[1].X
-        lastCursor.Loc.Y = nextFoundLocs[1].Y
+        if cursorEnd then
+            lastCursor.Loc.X = nextFoundLocs[2].X
+            lastCursor.Loc.Y = nextFoundLocs[2].Y
+        else
+            lastCursor.Loc.X = nextFoundLocs[1].X
+            lastCursor.Loc.Y = nextFoundLocs[1].Y
+        end
     end
     
     -- micro.Log("lastCursor.Loc:", lastCursor.Loc)
