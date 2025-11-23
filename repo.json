@@ -12,6 +12,13 @@
   ],
   "Versions": [
     {
+      "Version": "0.6.0",
+      "Url": "https://github.com/Neko-Box-Coder/MicroOmni/releases/download/v0.6.0/release.zip",
+      "Require": {
+        "micro": ">=2.0.14"
+      }
+    },
+    {
       "Version": "0.5.0",
       "Url": "https://github.com/Neko-Box-Coder/MicroOmni/releases/download/v0.5.0/release.zip",
       "Require": {
