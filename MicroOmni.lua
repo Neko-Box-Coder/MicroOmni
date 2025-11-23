@@ -602,7 +602,7 @@ function preinit()
         missingCommands[#missingCommands + 1] = "bat"
     end
     
-    if not CheckCommand("diff -v") then
+    if not CheckCommand("diff --version") then
         missingCommands[#missingCommands + 1] = "diff"
     end
 
