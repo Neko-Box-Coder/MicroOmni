@@ -32,7 +32,7 @@ List of features:
 ---
 
 ## 📦️ Installation
-You can install MicroOmni using `micro -plugin install OmniMicro` by either
+You can install MicroOmni using `micro -plugin install MicroOmni` by either
 - Add it to `"pluginrepos"` in `settings.json`, like
 ``` json
 "pluginrepos": [
@@ -383,7 +383,8 @@ Recommended binding:
 
 ## 💾 Session Management
 
-You can save your current tabs and splits with session management as *.omnisession file
+You can save your current tabs and splits with session management as *.omnisession file.
+
 Auto saving is also enabled as well.
 
 ![Session Management Gif](./Resources/Session.gif)
