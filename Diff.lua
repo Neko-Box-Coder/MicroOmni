@@ -319,7 +319,7 @@ function Self.UpdateDiffView()
         if micro.CurPane() == val then
             -- Target start line = Diff start line + offset
             OmniDiffDiffPanes[i]:GetView().StartLine.Line = 
-                micro.CurPane():GetView().StartLine.Line - OmniDiffDiffPanesLineOffsets[i]
+                micro.CurPane():GetView().StartLine.Line + OmniDiffDiffPanesLineOffsets[i]
             
             -- OmniCenter(OmniDiffDiffPanes[i])
             return OmniDiffDiffPanes[i]
@@ -330,7 +330,7 @@ function Self.UpdateDiffView()
         if micro.CurPane() == val then
             -- Target start line = Diff start line + offset
             OmniDiffTargetPanes[i]:GetView().StartLine.Line = 
-                micro.CurPane():GetView().StartLine.Line + OmniDiffDiffPanesLineOffsets[i]
+                micro.CurPane():GetView().StartLine.Line - OmniDiffDiffPanesLineOffsets[i]
             
             -- OmniCenter(OmniDiffTargetPanes[i])
             return OmniDiffTargetPanes[i]
