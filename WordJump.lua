@@ -22,10 +22,10 @@ local OmniJumpWordsRecords = {}
 local OmniOriginalWordsRecords = {}
 
 local function AssignJumpWords(majorChars, minorChars, rowIndexStart, rowIndexEnd, currentJumpChar)
-    micro.Log("rowIndexStart:", rowIndexStart)
-    micro.Log("rowIndexEnd:", rowIndexEnd)
-    micro.Log("string.len(majorChars):", string.len(majorChars))
-    micro.Log("string.len(minorChars):", string.len(minorChars))
+    micro.Log("MicroOmni.WordJump - rowIndexStart:", rowIndexStart)
+    micro.Log("MicroOmni.WordJump - rowIndexEnd:", rowIndexEnd)
+    micro.Log("MicroOmni.WordJump - string.len(majorChars):", string.len(majorChars))
+    micro.Log("MicroOmni.WordJump - string.len(minorChars):", string.len(minorChars))
     local bp = micro.CurPane()
     local majorCharIndex = 1
     local minorCharIndex = 1

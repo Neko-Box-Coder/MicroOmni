@@ -54,10 +54,10 @@ local function processDiffOutput(output)
         local curLine
         if outputLines[i] ~= nil then
             curLine = outputLines[i]
-            micro.Log("Trying to find first diff: ", curLine)
+            micro.Log("MicroOmni.Diff - Trying to find first diff: ", curLine)
             if #curLine > 2 then
-                micro.Log("Checking[1]: ", curLine:sub(1, 1):byte())
-                micro.Log("Checking[2]: ", curLine:sub(2, 2):byte())
+                micro.Log("MicroOmni.Diff - Checking[1]: ", curLine:sub(1, 1):byte())
+                micro.Log("MicroOmni.Diff - Checking[2]: ", curLine:sub(2, 2):byte())
             end
             
             if #curLine > 2 and curLine:sub(1, 2) == "@@" then
@@ -67,11 +67,11 @@ local function processDiffOutput(output)
         end
     end
 
-    micro.Log("firstDiffIndex: ", firstDiffIndex)
+    micro.Log("MicroOmni.Diff - firstDiffIndex: ", firstDiffIndex)
     
     -- Return empty string if no diff
     if firstDiffIndex <= 0 then
-        micro.Log("No diff found")
+        micro.Log("MicroOmni.Diff - No diff found")
         return ""
     end
     
@@ -211,7 +211,6 @@ local function OnDiffFinishCallback(resp, cancelled)
         
         -- Create temp files if needed
         if micro.CurPane().Buf:Modified() then
-            micro.Log("A")
             local createdPath, success = 
                 Common.CreateRuntimeFile("./temp/minus.temp", micro.CurPane().Buf:Bytes())
             if not success then
@@ -227,7 +226,7 @@ local function OnDiffFinishCallback(resp, cancelled)
             if not success then
                 return
             end
-            micro.Log("Minus plus file success: ", createdPath)
+            micro.Log("MicroOmni.Diff - Minus plus file success: ", createdPath)
             plusFile = createdPath
         end
     end
@@ -241,11 +240,11 @@ local function OnDiffFinishCallback(resp, cancelled)
         return
     end
 
-    micro.Log("Running: ", "diff -U 5 \""..minusFile.."\" \""..plusFile.."\"")
+    micro.Log("MicroOmni.Diff - Running: ", "diff -U 5 \""..minusFile.."\" \""..plusFile.."\"")
     local output, err = shell.RunCommand("diff -U 5 \""..minusFile.."\" \""..plusFile.."\"")
     
-    micro.Log("output: ", output)
-    micro.Log("err: ", err)
+    micro.Log("MicroOmni.Diff - output: ", output)
+    micro.Log("MicroOmni.Diff - err: ", err)
     local processedDiffLines = processDiffOutput(output)
     
     if err == nil or err:Error() == "exit status 1" or err:Error() == "exit status 2" then

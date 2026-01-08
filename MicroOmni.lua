@@ -256,7 +256,7 @@ local function OmniCenter(bp)
     local targetLineY = view.StartLine.Line + view.Height / 2
     bp.Cursor:GotoLoc(Common.LocBoundCheck(bp.Buf, buffer.Loc(bp.Cursor.Loc.X, targetLineY)))
     
-    micro.Log("Node Tree:\n", bp:Tab():String())
+    -- micro.Log("Node Tree:\n", bp:Tab():String())
 end
 
 -- Testing auto complete for commands

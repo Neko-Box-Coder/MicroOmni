@@ -20,7 +20,7 @@ local Self = {}
 
 -- NOTE: lineNum is string
 local function fzfParseOutput(output, bp, lineNum, gotoLineIfExists)
-    micro.Log("fzfParseOutput called")
+    micro.Log("MicroOmni.Search - fzfParseOutput called")
     if output ~= "" and output ~= nil then
         local file = string.gsub(output, "[\n\r]", "")
         if file == nil then
@@ -39,7 +39,7 @@ local function getOS()
 end
 
 local function FindContent(str, searchLoc)
-    micro.Log("Find Content called")
+    micro.Log("MicroOmni.Search - Find Content called")
     local bp = micro.CurPane()
     local selectedText = str
     local fzfArgs
@@ -105,7 +105,7 @@ local function FindContent(str, searchLoc)
         finalCmd = "cmd /s /v:on /c "..finalCmd..""
     end
 
-    micro.Log("Running search cmd: ", finalCmd)
+    micro.Log("MicroOmni.Search - Running search cmd: ", finalCmd)
 
     local output, err = shell.RunInteractiveShell(finalCmd, false, true)
 

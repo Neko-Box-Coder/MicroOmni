@@ -172,12 +172,12 @@ function Self.OmniMinimap(bp)
     end
     
     for i = 0, indentCutoff do
-        micro.Log("i:", i)
+        micro.Log("MicroOmni.Minimap - i:", i)
         if indentCount[i] ~= nil then
-            micro.Log("indentCount[", i, "]:", indentCount[i])
+            micro.Log("MicroOmni.Minimap - indentCount[", i, "]:", indentCount[i])
         end
         if indentBudget[i] ~= nil then
-            micro.Log("indentBudget[", i, "]:", indentBudget[i])
+            micro.Log("MicroOmni.Minimap - indentBudget[", i, "]:", indentBudget[i])
         end
     end
     

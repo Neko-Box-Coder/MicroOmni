@@ -143,8 +143,8 @@ end
 
 
 local function GoToHistoryEntry(bp, entry)
-    micro.Log("GoToHistoryEntry called")
-    micro.Log(  "Goto Entry: ", OmniCursorFilePathMap[entry.FileId], 
+    micro.Log("MicroOmni.History - GoToHistoryEntry called")
+    micro.Log(  "MicroOmni.History - Goto Entry: ", OmniCursorFilePathMap[entry.FileId], 
                 ", ", entry.CursorLoc.X, ", ", entry.CursorLoc.Y)
 
     OmniTimeTravelMessageShowed = false
@@ -159,7 +159,7 @@ local function GoToHistoryEntry(bp, entry)
         end
     end
 
-    micro.Log("entryFilePath:", entryFilePath)
+    micro.Log("MicroOmni.History - entryFilePath:", entryFilePath)
 
     -- micro.Log("We have ", #micro.Tabs().List, " tabs")
     if not Common.OpenPaneIfExist(entryFilePath) then
