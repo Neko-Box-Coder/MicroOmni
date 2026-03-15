@@ -274,6 +274,9 @@ function Self.OmniTabSearch(bp)
     end
     
     local fzfArgs = config.GetGlobalOption("MicroOmni.TabSearchArgs"):gsub("{filePath}", "\""..createdPath.."\"")
+    if bp.Cursor:HasSelection() then
+        fzfArgs = fzfArgs.." -q '"..util.String(bp.Cursor:GetSelection()).."'"
+    end
     
     local finalCmd =  config.GetGlobalOption("MicroOmni.FzfCmd").." "..fzfArgs
     local output, err = shell.RunInteractiveShell(finalCmd, false, true)
