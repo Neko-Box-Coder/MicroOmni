@@ -28,6 +28,12 @@ local function getSessionFilePath(sessionName, useWorkingDir)
     else
         local microOmniDir = config.ConfigDir.."/plug/MicroOmni/"
         local sessionsPath = filepath.Join(microOmniDir, sessionsDir)
+        -- MkdirAll does nothing if dir already exists
+        local err = os.MkdirAll(sessionsPath, os.ModePerm)
+        if err ~= nil then
+            micro.InfoBar():Error("Failed to session dir with error", err) 
+            return nil
+        end
         return filepath.Join(sessionsPath, sessionName .. ".omnisession")
     end
 end
@@ -128,7 +134,7 @@ function Session.SaveSession(bp, args, useWorkingDir)
     local success = (err == nil)
     
     if not success then
-        micro.InfoBar():Error("Failed to save session: " .. sessionName)
+        micro.InfoBar():Error("Failed to save session: " .. sessionName, ", Error: ", err)
     else
         micro.InfoBar():Message("Session '" .. sessionName .. "' saved" .. 
                                 (useWorkingDir and " to working directory" or ""))
