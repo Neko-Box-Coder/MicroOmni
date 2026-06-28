@@ -172,7 +172,15 @@ local function GoToHistoryEntry(bp, entry)
 end
 
 function Self.GoToPreviousHistory(bp)
-    if #OmniCursorHistory == 0 or OmniCursorIndices.CurrentIndex <= OmniCursorIndices.StartIndex then
+    if #OmniCursorHistory == 0 then
+        return
+    end
+    
+    -- Special condition to avoid current index being stuck when outside of start and end index range
+    if  OmniCursorIndices.CurrentIndex <= OmniCursorIndices.StartIndex and 
+        OmniCursorIndices.EndIndex > OmniCursorIndices.StartIndex then
+        
+        OmniCursorIndices.CurrentIndex = OmniCursorIndices.StartIndex + 1
         return
     end
 
@@ -184,6 +192,14 @@ end
 
 function Self.GoToNextHistory(bp)
     if #OmniCursorHistory == 0 or OmniCursorIndices.CurrentIndex >= OmniCursorIndices.EndIndex then
+        return
+    end
+
+    -- Special condition to avoid current index being stuck when outside of start and end index range
+    if  OmniCursorIndices.CurrentIndex >= OmniCursorIndices.EndIndex and 
+        OmniCursorIndices.EndIndex > OmniCursorIndices.StartIndex then
+        
+        OmniCursorIndices.CurrentIndex = OmniCursorIndices.EndIndex - 1
         return
     end
 
