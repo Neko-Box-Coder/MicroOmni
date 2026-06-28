@@ -141,7 +141,13 @@ local function OnSearchDirSetDone(resp, cancelled)
     if filepath.IsAbs(fileDir) then
         fileDir = Common.ToRelPath(fileDir)
     end
+    
+    fileDir = filepath.Clean(fileDir)
+    
     OmniContentFindPath = resp:gsub("{fileDir}", filepath.Dir(fileDir))
+    if OmniContentFindPath == "." then
+        OmniContentFindPath = ""
+    end
     micro.InfoBar():Prompt("Content to find > ", OmniSearchText, "", nil, OnFindPromptDone)
 end
 
