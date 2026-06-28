@@ -434,6 +434,10 @@ Recommended binding:
 
 None (Invoke it in command pane)
 
+### ⚙️ Diff View Settings
+- `MicroOmni.DiffOptions`: Additional options to be passed to `diff`. Use `setlocal` for any one time
+diff options.
+
 ---
 
 ## 🧲 Side By Side View

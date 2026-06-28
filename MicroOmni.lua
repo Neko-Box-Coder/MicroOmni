@@ -420,6 +420,9 @@ local function InitializeSettings()
     config.RegisterCommonOption('MicroOmni', 'AutoSaveName', "autosave")
     config.RegisterCommonOption('MicroOmni', 'AutoSaveInterval', 60)
     config.RegisterCommonOption('MicroOmni', 'ResizeAmount', 5)
+    
+    config.RegisterCommonOption('MicroOmni', 'DiffOptions', "")
+    
     -- config.RegisterCommonOption('MicroOmni', 'AutoDisablePropResize', true)
     
     if config.GetGlobalOption("OmniGlobalSearchArgs") ~= nil then

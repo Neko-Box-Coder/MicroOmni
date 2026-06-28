@@ -240,8 +240,20 @@ local function OnDiffFinishCallback(resp, cancelled)
         return
     end
 
-    micro.Log("MicroOmni.Diff - Running: ", "diff -U 5 \""..minusFile.."\" \""..plusFile.."\"")
-    local output, err = shell.RunCommand("diff -U 5 \""..minusFile.."\" \""..plusFile.."\"")
+    local diffOptions = ""
+    if micro.CurPane().Buf.Settings["MicroOmni.DiffOptions"] then
+        diffOptions = micro.CurPane().Buf.Settings["MicroOmni.DiffOptions"]
+    elseif config.GetGlobalOption("MicroOmni.DiffOptions") ~= "" then
+        diffOptions = config.GetGlobalOption("MicroOmni.DiffOptions")
+    end
+    
+    if diffOptions ~= "" then
+        diffOptions = diffOptions .. " "
+    end
+
+    micro.Log("MicroOmni.Diff - Running: ", "diff -U 5 "..diffOptions.."\""..minusFile.."\" \""..plusFile.."\"")
+    micro.InfoBar():Message("MicroOmni.Diff - Running: ", "diff -U 5 "..diffOptions.."\""..minusFile.."\" \""..plusFile.."\"")
+    local output, err = shell.RunCommand("diff -U 5 "..diffOptions.."\""..minusFile.."\" \""..plusFile.."\"")
     
     micro.Log("MicroOmni.Diff - output: ", output)
     micro.Log("MicroOmni.Diff - err: ", err)
