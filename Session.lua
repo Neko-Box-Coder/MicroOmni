@@ -29,7 +29,7 @@ local function getSessionFilePath(sessionName, useWorkingDir)
         local microOmniDir = config.ConfigDir.."/plug/MicroOmni/"
         local sessionsPath = filepath.Join(microOmniDir, sessionsDir)
         -- MkdirAll does nothing if dir already exists
-        local err = os.MkdirAll(sessionsPath, os.ModePerm)
+        local err = goos.MkdirAll(sessionsPath, goos.ModePerm)
         if err ~= nil then
             micro.InfoBar():Error("Failed to session dir with error", err) 
             return nil
